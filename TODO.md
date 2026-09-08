@@ -156,8 +156,9 @@ Legend: `[x]` done, `[ ]` not started.
 
  * [x] `UserEntity` — `id`, `username` (unique, citext-ish collation), `passwordHash`,
        `bloogTitle`, `isAdmin`, `createdAt`, `updatedAt`.
-   * [ ] Trim whitespace on write (the Rails app used `strip_attributes`); do it in a
-         DTO transform so it applies before validation.
+   * [x] Trim whitespace on write (the Rails app used `strip_attributes`). Done with
+         Zod's `.trim()` in the shared schemas, so it runs before `.min(1)` and a
+         whitespace-only title is rejected rather than stored.
  * [x] `PostEntity` — `id`, `userId`, `title`, `body` (Markdown source), `createdAt`, `updatedAt`.
    * [x] `@ManyToOne(() => UserEntity)` with a real FK and `ON DELETE CASCADE`, matching
          the Rails `:dependent => :delete`.
@@ -184,8 +185,9 @@ Legend: `[x]` done, `[ ]` not started.
    * [x] Cookie: `httpOnly`, `sameSite: 'lax'`, `secure` in production, rolling expiry.
  * [x] `AuthGuard` (is anyone logged in?) and `AdminGuard` (is it the admin?), plus a
        `@CurrentUser()` param decorator.
- * [ ] Ownership checks: you may only edit or delete your own posts. Admin may touch
-       anything. (Deferred until posts exist; `AdminGuard` and `@CurrentUser()` are ready.)
+ * [x] Ownership checks: you may only edit or delete your own posts; an admin may touch
+       anything. Enforced in `PostsService`, not a guard — a guard would have to load
+       the post to learn who owns it, and then the handler would load it again.
  * [x] CSRF: since auth rides on a cookie, require a custom header on all mutating
        requests, or issue a double-submit token. `SameSite=Lax` alone is not enough.
  * [x] Rate-limit login and registration. **Not** with `@nestjs/throttler`: its
@@ -212,17 +214,26 @@ Legend: `[x]` done, `[ ]` not started.
  * [ ] Endpoints:
    * [x] `POST /api/users` (register), `GET/PATCH /api/account`.
    * [x] `POST /api/sessions` (login), `DELETE /api/sessions` (logout), `GET /api/me`.
-   * [ ] `GET /api/bloogs` — paginated list of all bloogs.
-   * [ ] `GET /api/bloogs/:username` — one bloog plus a page of its posts.
-   * [ ] `GET /api/posts` — site-wide recent posts, paginated (drives the homepage).
-   * [ ] `GET /api/posts/:id`, `POST /api/posts`, `PATCH /api/posts/:id`, `DELETE /api/posts/:id`.
+   * [x] `GET /api/bloogs` — paginated list of all bloogs.
+   * [x] `GET /api/bloogs/:username` — one bloog plus a page of its posts.
+   * [x] `GET /api/posts` — site-wide recent posts, paginated (drives the homepage).
+   * [x] `GET /api/posts/:id`, `POST /api/posts`, `PATCH /api/posts/:id`, `DELETE /api/posts/:id`.
    * [ ] `GET /api/admin/users`, `DELETE /api/admin/users/:id`, `GET /api/admin/posts`.
- * [ ] Markdown: store the raw Markdown, render to HTML server-side with `markdown-it`,
+ * [x] Markdown: store the raw Markdown, render to HTML server-side with `markdown-it`,
        sanitize with `sanitize-html`, and return both `body` and `bodyHtml`.
-   * [ ] One `MarkdownService` used by both the API and the feed generator, so there is a
-         single place where sanitization happens. This is the XSS-critical path —
-         the Rails version leaned on `rails_xss` for the same reason.
+   * [x] One `MarkdownService` used by both the API and (later) the feed generator, so
+         there is a single place where sanitization happens. This is the XSS-critical
+         path — the Rails version leaned on `rails_xss` for the same reason.
+   * [x] Defends twice: `html: false` makes markdown-it escape raw HTML in the source,
+         and sanitize-html then filters the generated tree against an allowlist.
+   * [x] Caught by test: `simpleTransform` adds `rel`/`target` to links, but
+         sanitize-html strips them straight back off unless they are also in
+         `allowedAttributes` — the filter runs *after* the transform.
+   * [x] Also learned: markdown-it's own `validateLink` already refuses
+         `javascript:` and `data:` targets, so those never even become anchors.
  * [ ] Swagger via `@nestjs/swagger` at `/api/docs`.
+ * [x] Bloog listings avoid the obvious N+1: post counts and latest-post timestamps
+       for a whole page of users come from one grouped query, not one count per user.
 
 ## 7. Feeds
 
