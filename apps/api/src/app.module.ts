@@ -2,12 +2,15 @@ import { Module } from '@nestjs/common'
 import { APP_GUARD } from '@nestjs/core'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { AuthModule } from './auth/auth.module.js'
+import { BloogsModule } from './bloogs/bloogs.module.js'
 import { CsrfGuard } from './auth/guards/csrf.guard.js'
 import { RateLimitGuard } from './common/rate-limit.guard.js'
 import { AppConfigModule } from './config/config.module.js'
 import { loadEnv } from './config/env.js'
 import { buildDataSourceOptions } from './database/data-source.js'
 import { HealthController } from './health/health.controller.js'
+import { MarkdownModule } from './markdown/markdown.module.js'
+import { PostsModule } from './posts/posts.module.js'
 
 @Module({
   imports: [
@@ -17,7 +20,10 @@ import { HealthController } from './health/health.controller.js'
       // can never be pointed at differently-configured schemas.
       useFactory: () => buildDataSourceOptions(loadEnv()),
     }),
+    MarkdownModule,
     AuthModule,
+    PostsModule,
+    BloogsModule,
   ],
   controllers: [HealthController],
   providers: [
