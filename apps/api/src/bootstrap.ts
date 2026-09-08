@@ -6,6 +6,16 @@ import { TypeOrmSessionStore } from './auth/typeorm-session.store.js'
 import type { Env } from './config/env.js'
 
 export const SESSION_COOKIE_NAME = 'blooger.sid'
+
+/** Paths served outside the /api prefix. */
+export const FEED_ROUTES = [
+  'feed.atom',
+  'feed.rss',
+  'feed.json',
+  'bloogs/:username/feed.atom',
+  'bloogs/:username/feed.rss',
+  'bloogs/:username/feed.json',
+]
 export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000
 
 /**
@@ -43,7 +53,8 @@ export function configureApp(app: INestApplication, env: Env): void {
     }),
   )
 
-  // Feeds and sitemap.xml will be registered outside this prefix, since they are
-  // not part of the JSON API; add them to `exclude` when those routes land.
-  app.setGlobalPrefix('api')
+  // Feeds are not part of the JSON API, and `/feed.atom` is where readers look,
+  // so they sit outside the prefix. This list must stay in step with the routes
+  // on FeedsController; there is a test that fetches each one.
+  app.setGlobalPrefix('api', { exclude: FEED_ROUTES })
 }

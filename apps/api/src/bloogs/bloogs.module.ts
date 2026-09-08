@@ -10,5 +10,6 @@ import { BloogsService } from './bloogs.service.js'
   imports: [TypeOrmModule.forFeature([UserEntity, PostEntity]), PostsModule],
   controllers: [BloogsController],
   providers: [BloogsService],
+  exports: [BloogsService],
 })
 export class BloogsModule {}
