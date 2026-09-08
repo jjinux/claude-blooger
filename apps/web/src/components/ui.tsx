@@ -18,9 +18,10 @@ const BUTTON_BASE =
 const VARIANTS = {
   primary: 'border-accent bg-accent text-canvas hover:bg-accent-strong hover:border-accent-strong',
   secondary: 'border-line bg-surface text-ink hover:border-ink-faint',
-  // The sampled palette has no red, so the terminal's one warning colour does
-  // double duty for destructive actions.
-  danger: 'border-amber bg-transparent text-amber hover:bg-amber hover:text-canvas',
+  // Red is the one colour not sampled from the terminal -- the screenshot had
+  // none. Amber stays for errors and warnings, so the two signals read
+  // differently: amber means "read this", red means "this destroys data".
+  danger: 'border-red bg-transparent text-red hover:bg-red hover:text-canvas',
 } as const
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

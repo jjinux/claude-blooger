@@ -13,8 +13,11 @@
  *   - The cyan is 2.12:1 and is never used as text, only as a fill. That is what
  *     the terminal does with it too -- it is a cursor, not a word.
  *
- * The terminal palette contains no red at all, so errors and destructive actions
- * use the ochre. It is the only colour in the scheme that means "look at this".
+ * The terminal palette contains no red at all. Destructive actions still need
+ * one, so `--red` is the one colour here that is not sampled: ANSI red in light
+ * and ANSI bright red in dark, which is what a terminal would have used had the
+ * screenshot contained any. The ochre stays for errors and warnings, giving two
+ * distinct signals -- amber means "read this", red means "this destroys data".
  */
 :root {
   color-scheme: light;
@@ -31,6 +34,7 @@
   --accent: #5062f7;
   --accent-strong: #4c5ef6;
   --amber: #916515;
+  --red: #cc0000;
   --cyan: #00bfff;
 }
 
@@ -55,6 +59,7 @@
     --accent: #7c8bfb;
     --accent-strong: #9aa5fc;
     --amber: #c9a227;
+    --red: #ff5555;
     --cyan: #00bfff;
   }
 }
@@ -75,6 +80,7 @@
   --color-accent: var(--accent);
   --color-accent-strong: var(--accent-strong);
   --color-amber: var(--amber);
+  --color-red: var(--red);
   --color-cyan: var(--cyan);
 }
 
