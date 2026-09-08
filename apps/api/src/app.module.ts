@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { APP_GUARD } from '@nestjs/core'
 import { TypeOrmModule } from '@nestjs/typeorm'
+import { AdminModule } from './admin/admin.module.js'
 import { AuthModule } from './auth/auth.module.js'
 import { BloogsModule } from './bloogs/bloogs.module.js'
 import { CsrfGuard } from './auth/guards/csrf.guard.js'
@@ -26,6 +27,7 @@ import { PostsModule } from './posts/posts.module.js'
     PostsModule,
     BloogsModule,
     FeedsModule,
+    AdminModule,
   ],
   controllers: [HealthController],
   providers: [

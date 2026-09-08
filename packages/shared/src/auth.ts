@@ -1,14 +1,11 @@
 import { z } from 'zod'
-
-export const USERNAME_MIN_LENGTH = 3
-export const USERNAME_MAX_LENGTH = 64
-export const PASSWORD_MIN_LENGTH = 8
-/**
- * argon2 hashes the whole input, so an unbounded password is a cheap way to burn
- * server CPU. The cap is generous enough never to inconvenience a real passphrase.
- */
-export const PASSWORD_MAX_LENGTH = 200
-export const BLOOG_TITLE_MAX_LENGTH = 128
+import {
+  BLOOG_TITLE_MAX_LENGTH,
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+  USERNAME_MAX_LENGTH,
+  USERNAME_MIN_LENGTH,
+} from './constants.js'
 
 export const usernameSchema = z
   .string()
@@ -29,9 +26,9 @@ export const registerSchema = z.object({
 export type RegisterInput = z.infer<typeof registerSchema>
 
 /**
- * Deliberately lax compared to `registerSchema`: rejecting a login for failing
- * the *registration* rules would tell an attacker which usernames are well-formed
- * enough to exist, and would lock out any account created under older rules.
+ * Deliberately lax compared to `registerSchema`: rejecting a login for breaking
+ * the current registration rules would leak which usernames are well-formed
+ * enough to exist, and would lock out accounts created under older rules.
  */
 export const loginSchema = z.object({
   username: z.string().trim().min(1).max(USERNAME_MAX_LENGTH),
@@ -54,23 +51,3 @@ export const updateAccountSchema = z
     path: [],
   })
 export type UpdateAccountInput = z.infer<typeof updateAccountSchema>
-
-/** A user as the API is willing to expose it. Never carries the password hash. */
-export interface PublicUser {
-  id: number
-  username: string
-  bloogTitle: string
-  isAdmin: boolean
-  createdAt: string
-}
-
-/**
- * Returned by GET /api/me. The SPA calls it on boot to learn who it is and to
- * pick up the CSRF token it must echo on every mutating request.
- */
-export interface SessionResponse {
-  user: PublicUser | null
-  csrfToken: string
-}
-
-export const CSRF_HEADER = 'x-csrf-token'

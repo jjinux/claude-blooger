@@ -1,7 +1,6 @@
 import { z } from 'zod'
-
-export const DEFAULT_PAGE_SIZE = 10
-export const MAX_PAGE_SIZE = 50
+import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from './constants.js'
+import type { Page } from './types.js'
 
 /** Query string for any paginated listing. Coerces because query params are strings. */
 export const paginationQuerySchema = z.object({
@@ -10,17 +9,6 @@ export const paginationQuerySchema = z.object({
 })
 
 export type PaginationQuery = z.infer<typeof paginationQuerySchema>
-
-/** Envelope returned by every paginated endpoint. */
-export interface Page<T> {
-  items: T[]
-  page: number
-  perPage: number
-  totalItems: number
-  totalPages: number
-  hasPrevious: boolean
-  hasNext: boolean
-}
 
 export function buildPage<T>(items: T[], totalItems: number, query: PaginationQuery): Page<T> {
   const totalPages = Math.max(1, Math.ceil(totalItems / query.perPage))

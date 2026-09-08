@@ -1,9 +1,10 @@
 /**
- * Types and validation schemas shared by the API and the SPA.
+ * Everything the API needs: the zod-free contracts plus the validation schemas.
  *
- * This package exists so the two halves cannot drift: the request schemas the API
- * validates against are the same objects the SPA builds its forms from.
+ * The SPA imports `@blooger/shared/contracts` instead — see the note there about
+ * why pulling the schemas into the browser bundle is expensive.
  */
-export * from './auth'
-export * from './pagination'
-export * from './posts'
+export * from './auth.js'
+export * from './contracts.js'
+export * from './pagination.js'
+export * from './posts.js'

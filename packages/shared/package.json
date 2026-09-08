@@ -2,7 +2,7 @@
   "name": "@blooger/shared",
   "version": "1.0.0",
   "private": true,
-  "type": "commonjs",
+  "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
@@ -18,5 +18,15 @@
   },
   "devDependencies": {
     "typescript": "^6.0.3"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./contracts": {
+      "types": "./dist/contracts.d.ts",
+      "default": "./dist/contracts.js"
+    }
   }
 }

@@ -14,6 +14,11 @@ import { MarkdownService } from '../markdown/markdown.service.js'
 import type { UserEntity } from '../users/user.entity.js'
 import { PostEntity } from './post.entity.js'
 
+export interface AuthorPostStats {
+  postCount: number
+  latestPostAt: Date | null
+}
+
 @Injectable()
 export class PostsService {
   constructor(
@@ -63,6 +68,36 @@ export class PostsService {
     this.assertMayModify(post, actor)
 
     await this.posts.delete({ id: post.id })
+  }
+
+  /**
+   * Post counts and latest-post timestamps for a set of authors, in one grouped
+   * query rather than a count per author -- the N+1 that listing bloogs, or the
+   * admin user table, would otherwise be.
+   */
+  async statsByAuthor(userIds: number[]): Promise<Map<number, AuthorPostStats>> {
+    // `IN ()` with an empty list is a MySQL syntax error, so short-circuit.
+    if (userIds.length === 0) return new Map()
+
+    const rows = await this.posts
+      .createQueryBuilder('post')
+      .select('post.userId', 'userId')
+      .addSelect('COUNT(*)', 'postCount')
+      .addSelect('MAX(post.createdAt)', 'latestPostAt')
+      .where('post.userId IN (:...userIds)', { userIds })
+      .groupBy('post.userId')
+      .getRawMany<{ userId: number; postCount: string | number; latestPostAt: Date | string | null }>()
+
+    return new Map(
+      rows.map((row) => [
+        Number(row.userId),
+        {
+          // COUNT() comes back as a string from the MySQL driver.
+          postCount: Number(row.postCount),
+          latestPostAt: row.latestPostAt === null ? null : new Date(row.latestPostAt),
+        },
+      ]),
+    )
   }
 
   /**
