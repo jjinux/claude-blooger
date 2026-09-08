@@ -218,7 +218,7 @@ Legend: `[x]` done, `[ ]` not started.
    * [x] `GET /api/bloogs/:username` — one bloog plus a page of its posts.
    * [x] `GET /api/posts` — site-wide recent posts, paginated (drives the homepage).
    * [x] `GET /api/posts/:id`, `POST /api/posts`, `PATCH /api/posts/:id`, `DELETE /api/posts/:id`.
-   * [ ] `GET /api/admin/users`, `DELETE /api/admin/users/:id`, `GET /api/admin/posts`.
+   * [x] `GET /api/admin/users`, `DELETE /api/admin/users/:id`, `GET /api/admin/posts`.
  * [x] Markdown: store the raw Markdown, render to HTML server-side with `markdown-it`,
        sanitize with `sanitize-html`, and return both `body` and `bodyHtml`.
    * [x] One `MarkdownService` used by both the API and (later) the feed generator, so
@@ -269,8 +269,8 @@ Legend: `[x]` done, `[ ]` not started.
  * [x] `GET /bloogs/:username/feed.atom` (and `.rss`, `.json`) — one bloog.
  * [x] Correct `Content-Type` on each, absolute URLs throughout, and stable entry ids.
  * [x] `<link rel="alternate">` tags in the SPA's `index.html` for the site-wide feeds.
-   * [ ] Per-bloog autodiscovery still to do — it belongs on the bloog page, which
-         does not exist in the SPA yet.
+   * [x] Per-bloog autodiscovery: the bloog page injects its own `<link rel="alternate">`
+         while it is mounted, and removes it on unmount.
  * [x] Test that the output actually parses as well-formed XML — the Rails version's
        Cucumber suite checked exactly this, and it's an easy thing to silently break.
        `fast-xml-parser`'s validator stands in for Nokogiri.
@@ -289,23 +289,46 @@ Legend: `[x]` done, `[ ]` not started.
 
 ## 8. Frontend
 
- * [ ] Vite + React 19 + TypeScript, Tailwind v4 via `@tailwindcss/vite`.
- * [ ] react-router for routing; TanStack Query for server state, so caching and
+ * [x] Vite + React 19 + TypeScript, Tailwind v4 via `@tailwindcss/vite`.
+ * [x] react-router for routing; TanStack Query for server state, so caching and
        refetch-after-mutation don't get hand-rolled.
- * [ ] Pages:
-   * [ ] `/` — recent posts across all bloogs, newest first, with an "older entries"
+ * [x] Pages:
+   * [x] `/` — recent posts across all bloogs, newest first, with an "older entries"
          link at the bottom.
-   * [ ] `/bloogs` — every bloog. Empty state: "There are no bloogs yet."
-   * [ ] `/bloogs/:username` — one bloog's posts, paginated.
-   * [ ] `/bloogs/:username/posts/:id` — a single post.
-   * [ ] `/register`, `/login`, `/account`.
-   * [ ] `/posts/new`, `/posts/:id/edit`.
-   * [ ] `/admin` — users and posts, admin only.
- * [ ] Auth-aware shell: header reflects logged-in state; protected routes redirect to login.
- * [ ] Render `bodyHtml` from the server rather than parsing Markdown in the browser —
+   * [x] `/bloogs` — every bloog. Empty state: "There are no bloogs yet."
+   * [x] `/bloogs/:username` — one bloog's posts, paginated.
+   * [x] `/bloogs/:username/posts/:id` — a single post.
+   * [x] `/register`, `/login`, `/account`.
+   * [x] `/posts/new`, `/posts/:id/edit`.
+   * [x] `/admin` — users and posts, admin only.
+ * [x] Auth-aware shell: header reflects logged-in state; protected routes redirect to login.
+ * [x] Render `bodyHtml` from the server rather than parsing Markdown in the browser —
        one renderer, one sanitizer, no second attack surface.
- * [ ] Loading, empty, and error states for every list.
- * [ ] Dark mode, since Tailwind makes it nearly free.
+ * [x] Loading, empty, and error states for every list.
+ * [x] Dark mode, since Tailwind makes it nearly free.
+ * [x] Nest serves the built SPA in production, with a fallback so a hard refresh on
+       a client-side route works. Both handlers are registered before Nest's router;
+       the fallback passes through `/api/*` and anything with a file extension, so
+       `/bloogs/joe/feed.atom` is never answered with an HTML page.
+ * [x] An unmatched `/api` path now answers with JSON. It has to be registered
+       *after* `app.init()` — middleware added earlier runs before the router and
+       cannot tell a miss from a hit — otherwise Express's default handler replies
+       with an HTML page that a JSON client has to parse to discover it got a 404.
+ * [x] The API client bootstraps and refreshes its own CSRF token, so a mutation
+       never depends on some component having mounted `useSession()` first, and a
+       token invalidated by session regeneration is retried once rather than failing.
+ * [x] **Bundle:** the SPA imports `@blooger/shared/contracts`, not the package root.
+       Importing the root pulled in ~890 kB of zod source for the sake of three
+       numeric constants — the schemas are top-level `z.object(...)` calls evaluated
+       at import, which a bundler cannot prove are side-effect free. Splitting the
+       package took the bundle from 751 kB to 291 kB (180 kB to 90 kB gzipped).
+ * [x] **`packages/shared` is ESM.** It was the only CommonJS workspace, and its
+       `__exportStar` re-exports defeat static named-export analysis: Vite's dev
+       server failed with "does not provide an export named 'CSRF_HEADER'" and the
+       page rendered blank. Only the browser caught it — the unit tests resolve
+       through Vitest's own pipeline and the production bundler papered over it.
+ * [ ] Consider code-splitting the admin route; it is the only page most visitors
+       will never open.
 
 ## 9. Testing
 
@@ -340,8 +363,16 @@ Legend: `[x]` done, `[ ]` not started.
    * [x] Gotcha worth remembering: supertest's agent attaches its cookie jar when the
          request object is *constructed*, so a CSRF token must be fetched into a
          variable before building the request that carries it.
- * [~] React component tests with Testing Library + jsdom -- a smoke test for the
-       app shell exists and passes. MSW still to be added for real API fixtures.
+ * [x] React component tests with Testing Library + jsdom: 27 specs over the API
+       client, the home page, the auth-aware shell, login, and route guarding.
+       `fetch` is stubbed by a small in-repo router rather than MSW, which keeps the
+       test set-up to one file; revisit if the fixtures get unwieldy.
+ * [x] Verified in a real browser: rendering, login, post authoring, and that a
+       `<script>` in a post body reaches the DOM as inert text — 0 script elements
+       and 0 `on*` attributes inside the rendered body.
+ * [ ] Note for the Playwright suite: `form_input`-style value setting does not
+       drive React controlled inputs, and synthetic keystrokes were swallowed by
+       browser extensions. Playwright's own `fill()` handles both properly.
  * [ ] Playwright, a handful of flows only:
    * [ ] Register → log in → create a post → see it on the homepage → fetch the Atom feed.
    * [ ] Admin logs in, reaches `/admin`; a normal user gets 403.
