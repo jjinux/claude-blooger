@@ -9,7 +9,7 @@ services:
       MYSQL_USER: blooger
       MYSQL_PASSWORD: bl00gbuTT
     ports:
-      - "3306:3306"
+      - '3306:3306'
     volumes:
       - mysql-data:/var/lib/mysql
       # Runs once, only when the data volume is empty.
@@ -19,7 +19,7 @@ services:
       - --collation-server=utf8mb4_0900_ai_ci
     healthcheck:
       # `npm run db:up` uses `--wait`, which blocks until this passes.
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-ublooger", "-pbl00gbuTT"]
+      test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1', '-ublooger', '-pbl00gbuTT']
       interval: 3s
       timeout: 5s
       retries: 20
