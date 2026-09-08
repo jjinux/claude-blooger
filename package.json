@@ -1,0 +1,55 @@
+{
+  "name": "blooger",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A simple multi-user blogging engine. TypeScript port of the Rails 'blooger'.",
+  "license": "MIT",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=24.11.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run db:up && npm run build:shared && concurrently -n api,web -c cyan,magenta \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "npm run dev --workspace @blooger/api",
+    "dev:web": "npm run dev --workspace @blooger/web",
+    "build": "npm run build:shared && npm run build:web && npm run build:api",
+    "build:shared": "npm run build --workspace @blooger/shared",
+    "build:api": "npm run build --workspace @blooger/api",
+    "build:web": "npm run build --workspace @blooger/web",
+    "start": "npm run start --workspace @blooger/api",
+    "db:up": "docker compose up -d --wait",
+    "db:down": "docker compose down",
+    "db:nuke": "docker compose down -v",
+    "db:logs": "docker compose logs -f mysql",
+    "db:reset": "npm run db:nuke && npm run db:up && npm run migration:run && npm run seed",
+    "db:shell": "docker compose exec mysql mysql -ublooger -pbl00gbuTT blooger_dev",
+    "migration:generate": "npm run migration:generate --workspace @blooger/api --",
+    "migration:create": "npm run migration:create --workspace @blooger/api --",
+    "migration:run": "npm run migration:run --workspace @blooger/api",
+    "migration:revert": "npm run migration:revert --workspace @blooger/api",
+    "migration:show": "npm run migration:show --workspace @blooger/api",
+    "seed": "npm run seed --workspace @blooger/api",
+    "test": "npm run test --workspaces --if-present",
+    "test:api": "npm run test --workspace @blooger/api",
+    "test:web": "npm run test --workspace @blooger/web",
+    "test:e2e": "playwright test",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
+    "concurrently": "^10.0.5",
+    "eslint": "^10.10.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.9.6",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.70.0"
+  }
+}
