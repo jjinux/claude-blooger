@@ -195,6 +195,17 @@ Legend: `[x]` done, `[ ]` not started.
   - [x] Note: don't use `connect-typeorm` — last published 2022, and its peer dep is
         `typeorm ^0.3.0`, so it won't accept 1.x.
   - [x] Cookie: `httpOnly`, `sameSite: 'lax'`, `secure` in production, rolling expiry.
+  - [ ] **`pruneExpired()` is written but never called.** The store has a working
+        sweep and nothing invokes it, so expired session rows accumulate in MySQL
+        forever. Not a security hole — expiry is enforced on every read, and a stale
+        row can never authenticate a request — but the table grows without bound,
+        and every logged-out visitor who ever loaded a page leaves one behind.
+    - [ ] Decide where the sweep lives. A `setInterval` in a lifecycle hook is the
+          obvious answer and the wrong one for more than a single instance: every
+          replica would sweep concurrently. An external scheduler, or a lock, or
+          simply accepting the duplicate DELETEs since they are idempotent.
+    - [ ] Whatever runs it, it needs a test. The current `pruneExpired()` has none,
+          which is part of how it came to be dead code in the first place.
 - [x] `AuthGuard` (is anyone logged in?) and `AdminGuard` (is it the admin?), plus a
       `@CurrentUser()` param decorator.
 - [x] Ownership checks: you may only edit or delete your own posts; an admin may touch
