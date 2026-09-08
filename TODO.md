@@ -370,9 +370,16 @@ Legend: `[x]` done, `[ ]` not started.
  * [x] Verified in a real browser: rendering, login, post authoring, and that a
        `<script>` in a post body reaches the DOM as inert text — 0 script elements
        and 0 `on*` attributes inside the rendered body.
- * [ ] Note for the Playwright suite: `form_input`-style value setting does not
-       drive React controlled inputs, and synthetic keystrokes were swallowed by
-       browser extensions. Playwright's own `fill()` handles both properly.
+ * [ ] Note for the Playwright suite: driving the forms through the Chrome
+       extension did not work, in two distinct ways.
+   * [ ] Setting an input's value through the DOM does not drive a React controlled
+         input -- React never sees an `onChange`, so component state stays empty and
+         the form submits blanks. The workaround is the native value setter plus a
+         synthetic `input` event; Playwright's `fill()` does the right thing itself.
+   * [ ] Synthetic keystrokes never reached the page at all: the field took focus
+         but its value stayed empty. Reproduced in a clean Chrome profile with no
+         extensions installed, so this is not extension interference -- an earlier
+         guess that Grammarly and 1Password were swallowing the input was wrong.
  * [ ] Playwright, a handful of flows only:
    * [ ] Register → log in → create a post → see it on the homepage → fetch the Atom feed.
    * [ ] Admin logs in, reaches `/admin`; a normal user gets 403.
