@@ -107,10 +107,7 @@ describe('admin', () => {
     })
 
     it('404s deleting a user that does not exist', async () => {
-      await bossAgent
-        .delete('/api/admin/users/999999')
-        .set(CSRF_HEADER, boss.csrfToken)
-        .expect(404)
+      await bossAgent.delete('/api/admin/users/999999').set(CSRF_HEADER, boss.csrfToken).expect(404)
     })
 
     it('still requires a CSRF token', async () => {

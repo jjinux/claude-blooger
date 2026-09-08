@@ -19,7 +19,10 @@ export function BloogsPage() {
         {data && data.items.length === 0 && (
           <EmptyState>
             There are no bloogs yet.{' '}
-            <Link to="/register" className="font-medium text-sky-700 hover:underline dark:text-sky-400">
+            <Link
+              to="/register"
+              className="font-medium text-sky-700 hover:underline dark:text-sky-400"
+            >
               Create your own bloog
             </Link>
             .
@@ -40,7 +43,9 @@ export function BloogsPage() {
                   <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                     by {bloog.username} · {bloog.postCount}{' '}
                     {bloog.postCount === 1 ? 'post' : 'posts'}
-                    {bloog.latestPostAt !== null && <> · last posted {formatDate(bloog.latestPostAt)}</>}
+                    {bloog.latestPostAt !== null && (
+                      <> · last posted {formatDate(bloog.latestPostAt)}</>
+                    )}
                   </p>
                 </li>
               ))}

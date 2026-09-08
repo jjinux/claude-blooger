@@ -1,0 +1,10 @@
+node_modules/
+dist/
+coverage/
+package-lock.json
+playwright-report/
+test-results/
+
+# TODO.md uses a deliberate ` * [ ]` nested-checkbox format. Prettier rewrites those
+# bullets to `- [ ]` and reflows the whole file, so it is left alone on purpose.
+TODO.md

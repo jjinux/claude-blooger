@@ -210,7 +210,9 @@ describe('feeds', () => {
         .expect(201)
 
       const response = await ctx.agent.get('/bloogs/joe/feed.atom').expect(200)
-      const titles = asArray(parseWellFormedXml(response.text).feed.entry).map((e: any) => textOf(e.title))
+      const titles = asArray(parseWellFormedXml(response.text).feed.entry).map((e: any) =>
+        textOf(e.title),
+      )
 
       expect(titles).toEqual(['Joe post'])
     })
@@ -237,7 +239,9 @@ describe('feeds', () => {
         .expect(201)
 
       const response = await ctx.agent.get('/feed.atom').expect(200)
-      const titles = asArray(parseWellFormedXml(response.text).feed.entry).map((e: any) => textOf(e.title))
+      const titles = asArray(parseWellFormedXml(response.text).feed.entry).map((e: any) =>
+        textOf(e.title),
+      )
 
       expect(titles.sort()).toEqual(['Jane post', 'Joe post'])
     })

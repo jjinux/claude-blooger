@@ -1,4 +1,11 @@
-import { type CanActivate, type ExecutionContext, HttpException, HttpStatus, Injectable, SetMetadata } from '@nestjs/common'
+import {
+  type CanActivate,
+  type ExecutionContext,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  SetMetadata,
+} from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import type { Request } from 'express'
 
@@ -36,10 +43,10 @@ export class RateLimitGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const options = this.reflector.getAllAndOverride<RateLimitOptions | undefined>(
-      RATE_LIMIT_KEY,
-      [context.getHandler(), context.getClass()],
-    )
+    const options = this.reflector.getAllAndOverride<RateLimitOptions | undefined>(RATE_LIMIT_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ])
     if (!options) return true
 
     const request = context.switchToHttp().getRequest<Request>()

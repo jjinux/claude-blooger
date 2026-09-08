@@ -25,11 +25,21 @@ function UsersTable() {
         <table className="w-full text-left text-sm">
           <thead className="border-b border-slate-200 text-slate-500 dark:border-slate-800 dark:text-slate-400">
             <tr>
-              <th scope="col" className="py-2 pr-4 font-medium">User</th>
-              <th scope="col" className="py-2 pr-4 font-medium">Bloog</th>
-              <th scope="col" className="py-2 pr-4 font-medium">Posts</th>
-              <th scope="col" className="py-2 pr-4 font-medium">Joined</th>
-              <th scope="col" className="py-2 font-medium"><span className="sr-only">Actions</span></th>
+              <th scope="col" className="py-2 pr-4 font-medium">
+                User
+              </th>
+              <th scope="col" className="py-2 pr-4 font-medium">
+                Bloog
+              </th>
+              <th scope="col" className="py-2 pr-4 font-medium">
+                Posts
+              </th>
+              <th scope="col" className="py-2 pr-4 font-medium">
+                Joined
+              </th>
+              <th scope="col" className="py-2 font-medium">
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 dark:divide-slate-800">

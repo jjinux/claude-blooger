@@ -18,9 +18,13 @@ function tagsIn(html: string): string[] {
 function expectInert(html: string): void {
   const tags = tagsIn(html)
 
-  expect(tags.filter((tag) => /^<\s*\/?\s*(script|iframe|style|object|embed|form)\b/i.test(tag))).toEqual([])
+  expect(
+    tags.filter((tag) => /^<\s*\/?\s*(script|iframe|style|object|embed|form)\b/i.test(tag)),
+  ).toEqual([])
   expect(tags.filter((tag) => /\son\w+\s*=/i.test(tag))).toEqual([])
-  expect(tags.filter((tag) => /(href|src)\s*=\s*["']?\s*(javascript|data|vbscript):/i.test(tag))).toEqual([])
+  expect(
+    tags.filter((tag) => /(href|src)\s*=\s*["']?\s*(javascript|data|vbscript):/i.test(tag)),
+  ).toEqual([])
 }
 
 describe('MarkdownService', () => {
@@ -86,7 +90,13 @@ describe('MarkdownService', () => {
     it('survives a mixed payload', () => {
       expectInert(
         markdown.render(
-          ['# Title', '', '<svg/onload=alert(1)>', '[a](javascript:alert(1))', '<form action="/x">'].join('\n'),
+          [
+            '# Title',
+            '',
+            '<svg/onload=alert(1)>',
+            '[a](javascript:alert(1))',
+            '<form action="/x">',
+          ].join('\n'),
         ),
       )
     })

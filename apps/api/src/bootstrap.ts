@@ -110,7 +110,8 @@ function spaFallback(indexHtml: string) {
  * markup to discover it got a 404.
  */
 export function registerApiNotFound(app: NestExpressApplication): void {
-  app.getHttpAdapter()
+  app
+    .getHttpAdapter()
     .getInstance()
     .use((request: Request, response: Response, next: NextFunction) => {
       if (!request.path.startsWith('/api/')) return next()

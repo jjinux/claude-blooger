@@ -9,11 +9,5 @@
  * point of injection, is the cheapest place to add a third layer if we want one.
  */
 export function PostBody({ html }: { html: string }) {
-  return (
-    <div
-      className="prose-blooger"
-      // eslint-disable-next-line react/no-danger
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
-  )
+  return <div className="prose-blooger" dangerouslySetInnerHTML={{ __html: html }} />
 }

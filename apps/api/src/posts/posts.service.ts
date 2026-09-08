@@ -86,7 +86,11 @@ export class PostsService {
       .addSelect('MAX(post.createdAt)', 'latestPostAt')
       .where('post.userId IN (:...userIds)', { userIds })
       .groupBy('post.userId')
-      .getRawMany<{ userId: number; postCount: string | number; latestPostAt: Date | string | null }>()
+      .getRawMany<{
+        userId: number
+        postCount: string | number
+        latestPostAt: Date | string | null
+      }>()
 
     return new Map(
       rows.map((row) => [

@@ -15,7 +15,9 @@ describe('schema', () => {
   let dataSource: DataSource
 
   beforeAll(async () => {
-    dataSource = new DataSource(buildDataSourceOptions(loadEnv({ ...process.env, NODE_ENV: 'test' })))
+    dataSource = new DataSource(
+      buildDataSourceOptions(loadEnv({ ...process.env, NODE_ENV: 'test' })),
+    )
     await dataSource.initialize()
     await dataSource.runMigrations()
   }, 30_000)

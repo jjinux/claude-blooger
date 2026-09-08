@@ -43,7 +43,9 @@ describe('api client', () => {
   })
 
   it('turns an error response into an ApiError carrying the status', async () => {
-    mockFetch({ 'POST /api/sessions': { status: 401, body: { message: 'Incorrect username or password' } } })
+    mockFetch({
+      'POST /api/sessions': { status: 401, body: { message: 'Incorrect username or password' } },
+    })
 
     await expect(api.post('/api/sessions', {})).rejects.toMatchObject({
       status: 401,
@@ -55,7 +57,10 @@ describe('api client', () => {
     mockFetch({
       'POST /api/users': {
         status: 400,
-        body: { message: 'Validation failed', errors: [{ field: 'password', message: 'too short' }] },
+        body: {
+          message: 'Validation failed',
+          errors: [{ field: 'password', message: 'too short' }],
+        },
       },
     })
 
@@ -101,9 +106,12 @@ describe('api client', () => {
         const ok = token === 'fresh'
 
         return Promise.resolve(
-          new Response(JSON.stringify(ok ? { id: 1 } : { message: 'Missing or invalid CSRF token' }), {
-            status: ok ? 201 : 403,
-          }),
+          new Response(
+            JSON.stringify(ok ? { id: 1 } : { message: 'Missing or invalid CSRF token' }),
+            {
+              status: ok ? 201 : 403,
+            },
+          ),
         )
       }),
     )
@@ -121,7 +129,9 @@ describe('api client', () => {
       vi.fn((input: string) => {
         if (input === '/api/me') {
           return Promise.resolve(
-            new Response(JSON.stringify({ user: null, csrfToken: `t${attempts}` }), { status: 200 }),
+            new Response(JSON.stringify({ user: null, csrfToken: `t${attempts}` }), {
+              status: 200,
+            }),
           )
         }
         attempts += 1

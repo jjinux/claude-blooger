@@ -53,7 +53,6 @@ export class BloogsService {
 
     return { bloog: toBloogSummary(user, stats.get(user.id)), posts }
   }
-
 }
 
 function toBloogSummary(user: UserEntity, stats: AuthorPostStats | undefined): BloogSummary {

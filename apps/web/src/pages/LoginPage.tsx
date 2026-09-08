@@ -18,7 +18,10 @@ export function LoginPage() {
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
-    login.mutate({ username, password }, { onSuccess: () => void navigate(from, { replace: true }) })
+    login.mutate(
+      { username, password },
+      { onSuccess: () => void navigate(from, { replace: true }) },
+    )
   }
 
   return (

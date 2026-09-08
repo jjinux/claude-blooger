@@ -44,7 +44,10 @@ describe('LoginPage', () => {
   it('reports being rate limited rather than failing silently', async () => {
     mockFetch({
       'GET /api/me': { body: SESSION_ANON },
-      'POST /api/sessions': { status: 429, body: { message: 'Too many attempts. Try again shortly.' } },
+      'POST /api/sessions': {
+        status: 429,
+        body: { message: 'Too many attempts. Try again shortly.' },
+      },
     })
 
     renderWithProviders(<LoginPage />)

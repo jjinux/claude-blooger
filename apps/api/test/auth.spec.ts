@@ -7,7 +7,11 @@ import { bootstrapCsrf, createTestApp, type TestApp, truncateAll } from './harne
 // constructed, so `.set(HEADER, await bootstrapCsrf(...))` would send the token
 // from a session the request itself is not carrying.
 
-const CREDENTIALS = { username: 'joe', password: 'correct horse battery', bloogTitle: "Joe's Bloog" }
+const CREDENTIALS = {
+  username: 'joe',
+  password: 'correct horse battery',
+  bloogTitle: "Joe's Bloog",
+}
 
 describe('auth', () => {
   let ctx: TestApp
@@ -40,7 +44,11 @@ describe('auth', () => {
     it('creates an account and logs it in', async () => {
       const { body } = await register()
 
-      expect(body.user).toMatchObject({ username: 'joe', bloogTitle: "Joe's Bloog", isAdmin: false })
+      expect(body.user).toMatchObject({
+        username: 'joe',
+        bloogTitle: "Joe's Bloog",
+        isAdmin: false,
+      })
 
       const me = await ctx.agent.get('/api/me').expect(200)
       expect((me.body as SessionResponse).user?.username).toBe('joe')
@@ -202,10 +210,7 @@ describe('auth', () => {
       await register()
 
       const csrf3 = await bootstrapCsrf(ctx.agent)
-      await ctx.agent
-        .delete('/api/sessions')
-        .set(CSRF_HEADER, csrf3)
-        .expect(204)
+      await ctx.agent.delete('/api/sessions').set(CSRF_HEADER, csrf3).expect(204)
 
       const me = await ctx.agent.get('/api/me').expect(200)
       expect((me.body as SessionResponse).user).toBeNull()

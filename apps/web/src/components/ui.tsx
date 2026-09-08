@@ -1,4 +1,9 @@
-import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from 'react'
+import type {
+  ButtonHTMLAttributes,
+  InputHTMLAttributes,
+  ReactNode,
+  TextareaHTMLAttributes,
+} from 'react'
 import { Link } from 'react-router'
 
 /* Shared primitives. Small on purpose -- this is a blog, not a design system. */
@@ -56,7 +61,10 @@ interface FieldProps {
 export function Field({ label, htmlFor, error, hint, children }: FieldProps) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={htmlFor} className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+      <label
+        htmlFor={htmlFor}
+        className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+      >
         {label}
       </label>
       {children}
@@ -131,16 +139,25 @@ export function Pagination({
   if (!hasPrevious && !hasNext) return null
 
   return (
-    <nav aria-label="Pagination" className="flex items-center justify-between border-t border-slate-200 pt-6 dark:border-slate-800">
+    <nav
+      aria-label="Pagination"
+      className="flex items-center justify-between border-t border-slate-200 pt-6 dark:border-slate-800"
+    >
       {hasNext ? (
-        <Link to={hrefFor(page + 1)} className="text-sm font-medium text-sky-700 hover:underline dark:text-sky-400">
+        <Link
+          to={hrefFor(page + 1)}
+          className="text-sm font-medium text-sky-700 hover:underline dark:text-sky-400"
+        >
           ← Older entries
         </Link>
       ) : (
         <span />
       )}
       {hasPrevious ? (
-        <Link to={hrefFor(page - 1)} className="text-sm font-medium text-sky-700 hover:underline dark:text-sky-400">
+        <Link
+          to={hrefFor(page - 1)}
+          className="text-sm font-medium text-sky-700 hover:underline dark:text-sky-400"
+        >
           Newer entries →
         </Link>
       ) : (

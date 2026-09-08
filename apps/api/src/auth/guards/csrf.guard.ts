@@ -1,6 +1,11 @@
 import { timingSafeEqual } from 'node:crypto'
 import { CSRF_HEADER } from '@blooger/shared'
-import { type CanActivate, type ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common'
+import {
+  type CanActivate,
+  type ExecutionContext,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common'
 import type { Request } from 'express'
 
 /** Methods that must not change state, and so need no token. */
