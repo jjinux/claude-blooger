@@ -71,7 +71,7 @@ Legend: `[x]` done, `[ ]` not started.
    * [x] `tsx` runs TypeScript directly (seed, TypeORM CLI); `ts-node` is not used.
    * [x] Nest 12's own `ts-esm` schematic template was used as the reference for
          tsconfig and Vitest setup -- and it confirms Vitest is now Nest's default.
- * [ ] Answer "RSS or Atom?" — **generate all three**. Atom is the most correct choice for a
+ * [x] Answer "RSS or Atom?" — **generate all three**. Atom is the most correct choice for a
        blog and is what the Rails version emitted; RSS 2.0 is still what older readers expect;
        JSON Feed is cheap to add. The `feed` package emits all three from one object, so this
        is nearly free.
@@ -264,13 +264,28 @@ Legend: `[x]` done, `[ ]` not started.
 
 ## 7. Feeds
 
- * [ ] Use the `feed` package to emit Atom 1.0, RSS 2.0, and JSON Feed from one definition.
- * [ ] `GET /feed.atom`, `/feed.rss`, `/feed.json` — site-wide recent posts.
- * [ ] `GET /bloogs/:username/feed.atom` (and `.rss`, `.json`) — one bloog.
- * [ ] Correct `Content-Type` on each, absolute URLs throughout, and stable entry ids.
- * [ ] `<link rel="alternate">` tags in the SPA's `index.html` so readers autodiscover them.
- * [ ] Test that the output actually parses as well-formed XML — the Rails version's
+ * [x] Use the `feed` package to emit Atom 1.0, RSS 2.0, and JSON Feed from one definition.
+ * [x] `GET /feed.atom`, `/feed.rss`, `/feed.json` — site-wide recent posts.
+ * [x] `GET /bloogs/:username/feed.atom` (and `.rss`, `.json`) — one bloog.
+ * [x] Correct `Content-Type` on each, absolute URLs throughout, and stable entry ids.
+ * [x] `<link rel="alternate">` tags in the SPA's `index.html` for the site-wide feeds.
+   * [ ] Per-bloog autodiscovery still to do — it belongs on the bloog page, which
+         does not exist in the SPA yet.
+ * [x] Test that the output actually parses as well-formed XML — the Rails version's
        Cucumber suite checked exactly this, and it's an easy thing to silently break.
+       `fast-xml-parser`'s validator stands in for Nokogiri.
+ * [x] Feeds are served outside the `/api` prefix, via `setGlobalPrefix`'s `exclude`.
+       That list has to stay in step with `FeedsController`, so a test fetches every
+       feed route and also asserts they are *not* reachable under `/api`.
+ * [x] Checked the CDATA escape hatch: a body containing `]]>` would end the CDATA
+       section early and let the rest be parsed as markup. Two independent things
+       stop it — markdown-it escapes `>` to `&gt;` well before this point, and the
+       `feed` library splits any literal `]]>` into `]]]]><![CDATA[>`. There is a
+       test that drives the whole chain rather than either half.
+ * [x] Feed entries carry the same sanitized HTML the API serves, from the one
+       `MarkdownService`, so a reader and the site can never disagree.
+ * [ ] Consider caching rendered feeds. Every request currently re-renders up to 20
+       post bodies from Markdown; fine at this size, wasteful under real traffic.
 
 ## 8. Frontend
 
