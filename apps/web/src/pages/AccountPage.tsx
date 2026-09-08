@@ -38,9 +38,7 @@ export function AccountPage() {
   return (
     <div className="mx-auto max-w-sm">
       <h1 className="text-3xl font-bold tracking-tight">Account</h1>
-      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-        Logged in as {user?.username}.
-      </p>
+      <p className="mt-2 text-sm text-ink-faint">Logged in as {user?.username}.</p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-5">
         <Field label="Bloog title" htmlFor="bloogTitle" error={error?.fieldError('bloogTitle')}>
@@ -53,10 +51,8 @@ export function AccountPage() {
           />
         </Field>
 
-        <fieldset className="space-y-5 border-t border-slate-200 pt-5 dark:border-slate-800">
-          <legend className="text-sm font-medium text-slate-700 dark:text-slate-300">
-            Change password
-          </legend>
+        <fieldset className="space-y-5 border-t border-line pt-5">
+          <legend className="text-sm font-medium text-ink-dim">Change password</legend>
 
           <Field
             label="Current password"
@@ -91,13 +87,13 @@ export function AccountPage() {
         </fieldset>
 
         {error && error.fieldErrors.length === 0 && (
-          <p role="alert" className="text-sm text-red-700 dark:text-red-400">
+          <p role="alert" className="text-sm text-amber">
             {error.message}
           </p>
         )}
 
         {saved && (
-          <p role="status" className="text-sm text-emerald-700 dark:text-emerald-400">
+          <p role="status" className="text-sm text-accent">
             Saved.
           </p>
         )}

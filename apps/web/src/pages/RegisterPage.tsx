@@ -78,7 +78,7 @@ export function RegisterPage() {
 
         {/* A taken username comes back as a 409 with no field attached. */}
         {error && error.fieldErrors.length === 0 && (
-          <p role="alert" className="text-sm text-red-700 dark:text-red-400">
+          <p role="alert" className="text-sm text-amber">
             {error.message}
           </p>
         )}
@@ -88,9 +88,9 @@ export function RegisterPage() {
         </Button>
       </form>
 
-      <p className="mt-6 text-sm text-slate-600 dark:text-slate-400">
+      <p className="mt-6 text-sm text-ink-dim">
         Already have one?{' '}
-        <Link to="/login" className="font-medium text-sky-700 hover:underline dark:text-sky-400">
+        <Link to="/login" className="font-medium text-accent hover:underline">
           Log in
         </Link>
         .

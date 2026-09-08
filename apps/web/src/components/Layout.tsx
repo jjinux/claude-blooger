@@ -2,9 +2,7 @@ import { Link, NavLink, Outlet, useNavigate } from 'react-router'
 import { useCurrentUser, useLogout } from '../api/queries'
 
 function navClass({ isActive }: { isActive: boolean }): string {
-  return isActive
-    ? 'text-sky-700 dark:text-sky-400'
-    : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
+  return isActive ? 'text-accent' : 'text-ink-dim hover:text-ink'
 }
 
 function Header() {
@@ -18,9 +16,9 @@ function Header() {
   }
 
   return (
-    <header className="border-b border-slate-200 dark:border-slate-800">
+    <header className="border-b border-line">
       <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-x-5 gap-y-2 px-5 py-4">
-        <Link to="/" className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-50">
+        <Link to="/" className="text-lg font-bold tracking-tight text-ink">
           Blooger
         </Link>
 
@@ -53,7 +51,7 @@ function Header() {
               <button
                 onClick={() => void handleLogout()}
                 disabled={logout.isPending}
-                className="text-slate-600 hover:text-slate-900 disabled:opacity-50 dark:text-slate-400 dark:hover:text-slate-100"
+                className="text-ink-dim hover:text-ink disabled:opacity-50"
               >
                 Log out
               </button>
@@ -76,8 +74,8 @@ function Header() {
 
 function Footer() {
   return (
-    <footer className="mt-16 border-t border-slate-200 dark:border-slate-800">
-      <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-4 px-5 py-6 text-sm text-slate-500 dark:text-slate-400">
+    <footer className="mt-16 border-t border-line">
+      <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-4 px-5 py-6 text-sm text-ink-faint">
         <span>Blooger</span>
         <span className="flex-1" />
         <a href="/feed.atom" className="hover:underline">
@@ -96,7 +94,7 @@ function Footer() {
 
 export function Layout() {
   return (
-    <div className="flex min-h-dvh flex-col bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <div className="flex min-h-dvh flex-col bg-canvas text-ink">
       <Header />
       <main className="mx-auto w-full max-w-3xl flex-1 px-5 py-10">
         <Outlet />

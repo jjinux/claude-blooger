@@ -38,9 +38,9 @@ export function BloogPage() {
 
       {data && (
         <>
-          <header className="border-b border-slate-200 pb-6 dark:border-slate-800">
+          <header className="border-b border-line pb-6">
             <h1 className="text-3xl font-bold tracking-tight">{data.bloog.bloogTitle}</h1>
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            <p className="mt-2 text-sm text-ink-faint">
               by {data.bloog.username} ·{' '}
               <a href={`/bloogs/${data.bloog.username}/feed.atom`} className="hover:underline">
                 Atom feed

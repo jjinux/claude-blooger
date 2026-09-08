@@ -14,14 +14,14 @@ export function PostCard({ post, showAuthor = true }: { post: PostSummary; showA
   const permalink = `/bloogs/${post.author.username}/posts/${post.id}`
 
   return (
-    <article className="border-b border-slate-200 pb-8 last:border-b-0 dark:border-slate-800">
-      <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
-        <Link to={permalink} className="hover:text-sky-700 dark:hover:text-sky-400">
+    <article className="border-b border-line pb-8 last:border-b-0">
+      <h2 className="text-2xl font-bold tracking-tight text-ink">
+        <Link to={permalink} className="hover:text-accent">
           {post.title}
         </Link>
       </h2>
 
-      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+      <p className="mt-1 text-sm text-ink-faint">
         <time dateTime={post.createdAt}>{formatDate(post.createdAt)}</time>
         {showAuthor && (
           <>
