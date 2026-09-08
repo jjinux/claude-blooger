@@ -10,6 +10,8 @@ export default defineConfig({
     environment: 'node',
     root: './',
     include: ['src/**/*.spec.ts', 'test/**/*.spec.ts'],
+    // Migrates blooger_test once for the whole run.
+    globalSetup: ['./test/global-setup.ts'],
     // Database tests share one connection and one rolled-back transaction against
     // a single test schema, so test files must not run in parallel.
     fileParallelism: false,
