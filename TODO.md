@@ -171,33 +171,47 @@ Legend: `[x]` done, `[ ]` not started.
 
 ## 5. Auth
 
- * [ ] argon2id hashing via the `argon2` package, with sensible memory/time cost, in one
+ * [x] argon2id hashing via the `argon2` package, with sensible memory/time cost, in one
        `PasswordService` so the parameters live in exactly one place.
- * [ ] Registration: username + password + bloog title. Reject duplicate usernames with a
+ * [x] Registration: username + password + bloog title. Reject duplicate usernames with a
        proper 409 rather than letting the unique-index error escape as a 500.
- * [ ] Login / logout writing and clearing the session cookie.
-   * [ ] Compare against a dummy hash on unknown usernames so the response time doesn't
+ * [x] Login / logout writing and clearing the session cookie.
+   * [x] Compare against a dummy hash on unknown usernames so the response time doesn't
          leak whether an account exists.
- * [ ] Session store: `express-session` backed by a small hand-written TypeORM store.
-   * [ ] Note: don't use `connect-typeorm` — last published 2022, and its peer dep is
+ * [x] Session store: `express-session` backed by a small hand-written TypeORM store.
+   * [x] Note: don't use `connect-typeorm` — last published 2022, and its peer dep is
          `typeorm ^0.3.0`, so it won't accept 1.x.
-   * [ ] Cookie: `httpOnly`, `sameSite: 'lax'`, `secure` in production, rolling expiry.
- * [ ] `AuthGuard` (is anyone logged in?) and `AdminGuard` (is it the admin?), plus a
+   * [x] Cookie: `httpOnly`, `sameSite: 'lax'`, `secure` in production, rolling expiry.
+ * [x] `AuthGuard` (is anyone logged in?) and `AdminGuard` (is it the admin?), plus a
        `@CurrentUser()` param decorator.
- * [ ] Ownership checks: you may only edit or delete your own posts. Admin may touch anything.
- * [ ] CSRF: since auth rides on a cookie, require a custom header on all mutating
+ * [ ] Ownership checks: you may only edit or delete your own posts. Admin may touch
+       anything. (Deferred until posts exist; `AdminGuard` and `@CurrentUser()` are ready.)
+ * [x] CSRF: since auth rides on a cookie, require a custom header on all mutating
        requests, or issue a double-submit token. `SameSite=Lax` alone is not enough.
- * [ ] Rate-limit login and registration with `@nestjs/throttler`.
- * [ ] Account editing: change bloog title, change password (requires the current password).
+ * [x] Rate-limit login and registration. **Not** with `@nestjs/throttler`: its
+       current release (6.5.0) declares peer support only up to `@nestjs/common ^11`,
+       so it refuses to install against Nest 12. Replaced by a ~50-line in-process
+       fixed-window `RateLimitGuard`. Per-instance and memory-backed, so swap in a
+       shared store before running replicas.
+ * [x] Account editing: change bloog title, change password (requires the current password).
+ * [x] Regenerate the session id on login, so a token planted before login cannot be
+       upgraded to an authenticated one (session fixation).
+ * [x] Re-read the user from the database on every guarded request rather than trusting
+       the session payload, so a deleted or demoted account loses access at once.
+ * [x] Extract `configureApp()` so tests boot the same app main.ts does -- session
+       middleware and global guards included.
 
 ## 6. API
 
- * [ ] Global `ValidationPipe` with `whitelist` and `forbidNonWhitelisted`, so unexpected
-       fields are rejected rather than silently dropped.
+ * [x] Validation via a small `ZodValidationPipe` against the schemas in
+       `packages/shared`, rather than `class-validator`. Zod strips unknown keys from
+       object schemas by default, which gives the same protection `whitelist: true`
+       would -- covered by a test that a smuggled `isAdmin` field cannot reach the entity.
+       This keeps one schema shared by the API and the SPA instead of two definitions.
  * [ ] Consistent error shape via an exception filter.
  * [ ] Endpoints:
-   * [ ] `POST /api/users` (register), `GET/PATCH /api/account`.
-   * [ ] `POST /api/sessions` (login), `DELETE /api/sessions` (logout), `GET /api/me`.
+   * [x] `POST /api/users` (register), `GET/PATCH /api/account`.
+   * [x] `POST /api/sessions` (login), `DELETE /api/sessions` (logout), `GET /api/me`.
    * [ ] `GET /api/bloogs` — paginated list of all bloogs.
    * [ ] `GET /api/bloogs/:username` — one bloog plus a page of its posts.
    * [ ] `GET /api/posts` — site-wide recent posts, paginated (drives the homepage).
@@ -248,17 +262,31 @@ Legend: `[x]` done, `[ ]` not started.
    * [x] `vite-tsconfig-paths` is obsolete too -- Vite 8 has `resolve.tsconfigPaths`.
  * [ ] Unit tests with no database: password hashing, Markdown rendering and sanitization,
        feed XML generation, pagination math.
- * [~] Integration tests against a real MySQL `blooger_test`: a first spec exists
-       (`schema.spec.ts`) and runs migrations at suite start. The per-test transaction
-       harness below is still to do.
+ * [x] Integration tests against a real MySQL `blooger_test`.
+   * [x] Migrated once per run by a Vitest `globalSetup`.
+   * [x] **Correction to the original plan.** Transaction-per-test cannot work for
+         HTTP-level tests: each request takes an arbitrary connection from the pool,
+         so a transaction opened on one QueryRunner is invisible to the code under
+         test. `test/harness.ts` therefore provides both -- `truncateAll()` for
+         full-stack tests (the honest choice, if slower) and `withRollback()` for
+         service-level tests, where handing the code the QueryRunner's EntityManager
+         is straightforward.
+   * [x] `TRUNCATE` runs on one pinned QueryRunner, because `FOREIGN_KEY_CHECKS` is
+         session-scoped and would otherwise land on a different pooled connection
+         than the truncates it is meant to cover.
    * [ ] Migrate once at suite start.
    * [ ] Per-test transaction on a single shared `QueryRunner`, rolled back in `afterEach`.
    * [ ] Override the Nest `DataSource`/`EntityManager` provider so code under test uses
          that same QueryRunner — otherwise it opens its own connection and sees none of
          the test's uncommitted data. This is the one fiddly part of the strategy.
    * [ ] Watch out: DDL inside a test commits implicitly in MySQL and breaks the rollback.
- * [ ] HTTP tests with Supertest: auth flows, ownership rules (a user may not edit
-       someone else's post), validation failures, feed content types.
+ * [x] HTTP tests with Supertest: 26 auth specs covering registration, duplicate and
+       case-duplicate usernames, CSRF rejection, login, the username-enumeration
+       guarantee, session fixation, cookie flags, rate limiting, logout, and account
+       edits. Ownership rules and feed content types come with those features.
+   * [x] Gotcha worth remembering: supertest's agent attaches its cookie jar when the
+         request object is *constructed*, so a CSRF token must be fetched into a
+         variable before building the request that carries it.
  * [~] React component tests with Testing Library + jsdom -- a smoke test for the
        app shell exists and passes. MSW still to be added for real API fixtures.
  * [ ] Playwright, a handful of flows only:
