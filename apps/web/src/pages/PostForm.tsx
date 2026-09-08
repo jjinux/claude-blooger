@@ -61,7 +61,7 @@ export function PostForm({
 
       {/* Anything that is not a per-field problem, such as a 403 or a network failure. */}
       {apiError && apiError.fieldErrors.length === 0 && (
-        <p role="alert" className="text-sm text-red-700 dark:text-red-400">
+        <p role="alert" className="text-sm text-amber">
           {apiError.message}
         </p>
       )}

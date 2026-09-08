@@ -23,7 +23,7 @@ function UsersTable() {
     <>
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-slate-200 text-slate-500 dark:border-slate-800 dark:text-slate-400">
+          <thead className="border-b border-line text-ink-faint">
             <tr>
               <th scope="col" className="py-2 pr-4 font-medium">
                 User
@@ -42,7 +42,7 @@ function UsersTable() {
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+          <tbody className="divide-y divide-line">
             {data.items.map((user) => (
               <tr key={user.id}>
                 <td className="py-3 pr-4">
@@ -50,16 +50,12 @@ function UsersTable() {
                     {user.username}
                   </Link>
                   {user.isAdmin && (
-                    <span className="ml-2 rounded bg-slate-200 px-1.5 py-0.5 text-xs dark:bg-slate-800">
-                      admin
-                    </span>
+                    <span className="ml-2 rounded bg-surface px-1.5 py-0.5 text-xs">admin</span>
                   )}
                 </td>
-                <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{user.bloogTitle}</td>
+                <td className="py-3 pr-4 text-ink-dim">{user.bloogTitle}</td>
                 <td className="py-3 pr-4 tabular-nums">{user.postCount}</td>
-                <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">
-                  {formatDate(user.createdAt)}
-                </td>
+                <td className="py-3 pr-4 text-ink-dim">{formatDate(user.createdAt)}</td>
                 <td className="py-3 text-right">
                   {/* The API refuses this too; hiding it avoids an error people
                       cannot act on. */}
@@ -107,7 +103,7 @@ function RecentPosts() {
   if (data.items.length === 0) return <EmptyState>No posts yet.</EmptyState>
 
   return (
-    <ul className="divide-y divide-slate-200 text-sm dark:divide-slate-800">
+    <ul className="divide-y divide-line text-sm">
       {data.items.map((post) => (
         <li key={post.id} className="flex flex-wrap items-baseline gap-x-3 py-2.5">
           <Link
@@ -116,7 +112,7 @@ function RecentPosts() {
           >
             {post.title}
           </Link>
-          <span className="text-slate-500 dark:text-slate-400">
+          <span className="text-ink-faint">
             by {post.author.username} · {formatDate(post.createdAt)}
           </span>
         </li>

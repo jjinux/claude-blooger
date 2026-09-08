@@ -33,7 +33,7 @@ export function PostPage() {
     <article>
       <h1 className="text-3xl font-bold tracking-tight">{post.title}</h1>
 
-      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+      <p className="mt-2 text-sm text-ink-faint">
         <time dateTime={post.createdAt}>{formatDate(post.createdAt)}</time>
         {' · '}
         <Link to={`/bloogs/${post.author.username}`} className="hover:underline">
@@ -46,7 +46,7 @@ export function PostPage() {
       </div>
 
       {mayEdit && (
-        <div className="mt-10 flex gap-3 border-t border-slate-200 pt-6 dark:border-slate-800">
+        <div className="mt-10 flex gap-3 border-t border-line pt-6">
           <ButtonLink to={`/posts/${post.id}/edit`} variant="secondary">
             Edit
           </ButtonLink>

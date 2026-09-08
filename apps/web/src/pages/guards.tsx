@@ -22,11 +22,9 @@ export function RequireAuth({ admin = false }: { admin?: boolean }) {
 
   if (admin && !user.isAdmin) {
     return (
-      <div role="alert" className="rounded-lg border border-slate-300 p-6 dark:border-slate-700">
+      <div role="alert" className="rounded-lg border border-line p-6">
         <h1 className="text-xl font-bold">Not allowed</h1>
-        <p className="mt-2 text-slate-600 dark:text-slate-400">
-          The admin section is only for administrators.
-        </p>
+        <p className="mt-2 text-ink-dim">The admin section is only for administrators.</p>
       </div>
     )
   }

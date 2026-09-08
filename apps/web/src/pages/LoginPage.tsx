@@ -56,7 +56,7 @@ export function LoginPage() {
         {/* The server deliberately gives one message for both a bad username and a
             bad password, so there is nothing more specific to show here. */}
         {error && error.fieldErrors.length === 0 && (
-          <p role="alert" className="text-sm text-red-700 dark:text-red-400">
+          <p role="alert" className="text-sm text-amber">
             {error.message}
           </p>
         )}
@@ -66,9 +66,9 @@ export function LoginPage() {
         </Button>
       </form>
 
-      <p className="mt-6 text-sm text-slate-600 dark:text-slate-400">
+      <p className="mt-6 text-sm text-ink-dim">
         No account?{' '}
-        <Link to="/register" className="font-medium text-sky-700 hover:underline dark:text-sky-400">
+        <Link to="/register" className="font-medium text-accent hover:underline">
           Create your own bloog
         </Link>
         .

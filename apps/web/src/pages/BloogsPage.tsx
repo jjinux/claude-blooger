@@ -19,10 +19,7 @@ export function BloogsPage() {
         {data && data.items.length === 0 && (
           <EmptyState>
             There are no bloogs yet.{' '}
-            <Link
-              to="/register"
-              className="font-medium text-sky-700 hover:underline dark:text-sky-400"
-            >
+            <Link to="/register" className="font-medium text-accent hover:underline">
               Create your own bloog
             </Link>
             .
@@ -31,16 +28,16 @@ export function BloogsPage() {
 
         {data && data.items.length > 0 && (
           <>
-            <ul className="divide-y divide-slate-200 dark:divide-slate-800">
+            <ul className="divide-y divide-line">
               {data.items.map((bloog) => (
                 <li key={bloog.username} className="py-5">
                   <Link
                     to={`/bloogs/${bloog.username}`}
-                    className="text-xl font-semibold hover:text-sky-700 dark:hover:text-sky-400"
+                    className="text-xl font-semibold hover:text-accent"
                   >
                     {bloog.bloogTitle}
                   </Link>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  <p className="mt-1 text-sm text-ink-faint">
                     by {bloog.username} · {bloog.postCount}{' '}
                     {bloog.postCount === 1 ? 'post' : 'posts'}
                     {bloog.latestPostAt !== null && (
