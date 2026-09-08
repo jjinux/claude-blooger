@@ -243,3 +243,22 @@ describe('feeds', () => {
     })
   })
 })
+
+describe('api 404s', () => {
+  let ctx: TestApp
+
+  beforeAll(async () => {
+    ctx = await createTestApp()
+  }, 30_000)
+
+  afterAll(async () => {
+    await ctx?.close()
+  })
+
+  it('answers an unmatched /api path with JSON, not an HTML page', async () => {
+    const response = await ctx.agent.get('/api/nope').expect(404)
+
+    expect(response.headers['content-type']).toContain('application/json')
+    expect(response.body).toMatchObject({ statusCode: 404, error: 'Not Found' })
+  })
+})

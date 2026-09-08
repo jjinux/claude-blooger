@@ -1,11 +1,12 @@
 import { CSRF_HEADER, type PublicUser, type SessionResponse } from '@blooger/shared'
 import type { INestApplication } from '@nestjs/common'
+import type { NestExpressApplication } from '@nestjs/platform-express'
 import { Test } from '@nestjs/testing'
 import supertest from 'supertest'
 import type TestAgent from 'supertest/lib/agent.js'
 import { DataSource } from 'typeorm'
 import { AppModule } from '../src/app.module.js'
-import { configureApp } from '../src/bootstrap.js'
+import { configureApp, registerApiNotFound } from '../src/bootstrap.js'
 import { RateLimitGuard } from '../src/common/rate-limit.guard.js'
 import { loadEnv } from '../src/config/env.js'
 import { UserEntity } from '../src/users/user.entity.js'
@@ -30,10 +31,11 @@ export async function createTestApp(): Promise<TestApp> {
   const env = loadEnv({ ...process.env, NODE_ENV: 'test' })
 
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile()
-  const app = moduleRef.createNestApplication()
+  const app = moduleRef.createNestApplication<NestExpressApplication>()
 
   configureApp(app, env)
   await app.init()
+  registerApiNotFound(app)
 
   const dataSource = app.get(DataSource)
   const rateLimiter = app.get(RateLimitGuard)
