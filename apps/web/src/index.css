@@ -1,1 +1,144 @@
 @import 'tailwindcss';
+
+/*
+ * Typography for server-rendered post bodies.
+ *
+ * Tailwind's preflight deliberately strips the default styling from headings,
+ * lists, and the rest, which is right for UI but wrong for prose. The HTML inside
+ * .prose-blooger comes from MarkdownService and carries no classes of its own, so
+ * those defaults have to be put back here. (@tailwindcss/typography would do this
+ * too; this is a few dozen lines and avoids the dependency.)
+ */
+.prose-blooger {
+  --prose-gap: 1rem;
+  color: var(--color-slate-700);
+  line-height: 1.75;
+}
+
+@media (prefers-color-scheme: dark) {
+  .prose-blooger {
+    color: var(--color-slate-300);
+  }
+}
+
+.prose-blooger > * + * {
+  margin-top: var(--prose-gap);
+}
+
+.prose-blooger h1,
+.prose-blooger h2,
+.prose-blooger h3,
+.prose-blooger h4,
+.prose-blooger h5,
+.prose-blooger h6 {
+  color: var(--color-slate-900);
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 1.75rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .prose-blooger :is(h1, h2, h3, h4, h5, h6) {
+    color: var(--color-slate-50);
+  }
+}
+
+.prose-blooger h1 { font-size: 1.5rem; }
+.prose-blooger h2 { font-size: 1.3rem; }
+.prose-blooger h3 { font-size: 1.15rem; }
+
+.prose-blooger a {
+  color: var(--color-sky-700);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .prose-blooger a { color: var(--color-sky-400); }
+}
+
+.prose-blooger strong { font-weight: 700; }
+.prose-blooger em { font-style: italic; }
+
+.prose-blooger ul,
+.prose-blooger ol {
+  padding-left: 1.5rem;
+}
+
+.prose-blooger ul { list-style: disc; }
+.prose-blooger ol { list-style: decimal; }
+.prose-blooger li + li { margin-top: 0.25rem; }
+
+.prose-blooger blockquote {
+  border-left: 3px solid var(--color-slate-300);
+  padding-left: 1rem;
+  font-style: italic;
+  color: var(--color-slate-600);
+}
+
+@media (prefers-color-scheme: dark) {
+  .prose-blooger blockquote {
+    border-left-color: var(--color-slate-700);
+    color: var(--color-slate-400);
+  }
+}
+
+.prose-blooger code {
+  background: var(--color-slate-100);
+  border-radius: 0.25rem;
+  padding: 0.1em 0.35em;
+  font-size: 0.9em;
+}
+
+.prose-blooger pre {
+  background: var(--color-slate-100);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  /* Long lines scroll inside the block rather than widening the page. */
+  overflow-x: auto;
+}
+
+.prose-blooger pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.875rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .prose-blooger :is(code, pre) {
+    background: var(--color-slate-800);
+  }
+}
+
+.prose-blooger hr {
+  border-top: 1px solid var(--color-slate-200);
+  margin-block: 2rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .prose-blooger hr { border-top-color: var(--color-slate-800); }
+}
+
+.prose-blooger img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+}
+
+.prose-blooger table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.925rem;
+}
+
+.prose-blooger :is(th, td) {
+  border: 1px solid var(--color-slate-200);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.prose-blooger th { font-weight: 600; }
+
+@media (prefers-color-scheme: dark) {
+  .prose-blooger :is(th, td) { border-color: var(--color-slate-800); }
+}
