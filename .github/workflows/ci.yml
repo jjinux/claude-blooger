@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A new push to a pull request makes the run already in flight answer a question
+# nobody is asking any more.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    name: Format, lint, typecheck, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          # The one in .nvmrc, so CI and developers cannot drift apart.
+          node-version-file: .nvmrc
+          cache: npm
+
+      # npm declines to run install scripts for argon2 and @swc/core. Both ship
+      # prebuilt binaries, so the warning is expected and needs no action.
+      - run: npm ci
+
+      # Everything else resolves @blooger/shared through its dist/, so a missing
+      # build surfaces as "Cannot find module '@blooger/shared'".
+      - run: npm run build:shared
+
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
+
+  web:
+    name: Web tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build:shared
+
+      # jsdom only: no database, no servers.
+      - run: npm run test:web
+
+  api:
+    name: API tests
+    runs-on: ubuntu-latest
+
+    # loadEnv() reads process.env, and dotenv does not overwrite what is already
+    # set, so these win and CI never writes a .env of its own. The values match
+    # docker-compose.yml because that is the database being booted below.
+    env:
+      NODE_ENV: test
+      APP_URL: http://localhost:5173
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: blooger
+      DB_PASSWORD: bl00gbuTT
+      DB_NAME: blooger_dev
+      DB_NAME_TEST: blooger_test
+      # CI-only, and only has to clear the 32-character minimum.
+      SESSION_SECRET: ci-only-session-secret-0123456789abcdef
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build:shared
+
+      # The repo's own compose file rather than an Actions service container: it
+      # already carries the healthcheck that --wait blocks on and the init script
+      # that creates blooger_test. A service container would skip both and need
+      # them restated here, where they would drift from what developers run.
+      - run: npm run db:up
+
+      # Migrates blooger_test once via Vitest globalSetup and truncates between
+      # tests; blooger_dev is never touched.
+      - run: npm run test:api
+
+      # Not `npm run db:logs`: that one follows the log and would never exit.
+      - name: MySQL logs
+        if: failure()
+        run: docker compose logs --no-color --tail 200 mysql
