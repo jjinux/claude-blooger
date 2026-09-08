@@ -458,9 +458,15 @@ Legend: `[x]` done, `[ ]` not started.
   - [x] Verified by running the documented cold-start sequence verbatim against a
         destroyed volume: db:up, migration:run, seed. The seeded-account table in
         the README was checked against what the seed actually produces.
-- [ ] `CLAUDE.md` — the conventions above stated as rules: the TypeORM query style,
-      no eager/lazy relations, migrations never auto-run, `synchronize` never true,
-      where sanitization lives, how to run tests, and the layout of the workspaces.
+- [x] `CLAUDE.md` — the conventions stated as rules, plus the traps that have
+      already been hit once: the TypeORM 1.x query style, `Relation<T>`, no
+      eager/lazy relations, migrations never auto-run and `synchronize` never true,
+      that `MarkdownService` is the only place user input becomes markup, the two
+      test-isolation strategies and when each applies, and the shared package's two
+      entry points.
+  - [x] Every factual claim in it was checked against the code rather than written
+        from memory — file paths, exported names, guard registration, and config
+        values all verified.
 - [ ] Keep this TODO.md updated as things land.
 
 ## 11. Deferred
