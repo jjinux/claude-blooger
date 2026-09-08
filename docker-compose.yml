@@ -1,0 +1,29 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: blooger-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpw
+      MYSQL_DATABASE: blooger_dev
+      MYSQL_USER: blooger
+      MYSQL_PASSWORD: bl00gbuTT
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      # Runs once, only when the data volume is empty.
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+    healthcheck:
+      # `npm run db:up` uses `--wait`, which blocks until this passes.
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-ublooger", "-pbl00gbuTT"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+volumes:
+  mysql-data:
