@@ -515,7 +515,35 @@ inline`, so light and dark are one set of names and not two sets of classes.
         values all verified.
 - [ ] Keep this TODO.md updated as things land.
 
-## 11. Deferred
+## 11. Continuous integration
+
+- [ ] GitHub Actions running on every push to `main` and every pull request. The
+      repo is public and nothing currently runs on a PR — this is the largest gap
+      left in the tooling.
+- [ ] Three jobs, so a failure names itself instead of hiding inside one long log:
+  - [ ] **Static** — `format:check`, `lint`, `typecheck`, `build`. No database.
+  - [ ] **Web tests** — `test:web`. jsdom only, needs nothing.
+  - [ ] **API tests** — `test:api`, against a real MySQL.
+- [ ] Every job must run `npm run build:shared` first. `@blooger/shared` is
+      consumed through `dist/`, and without it the others fail with
+      "Cannot find module '@blooger/shared'" rather than anything informative.
+- [ ] Boot MySQL with the repo's own `docker compose` file (`npm run db:up`)
+      rather than an Actions service container. The compose file already carries
+      the healthcheck that `--wait` blocks on and the init script that creates
+      `blooger_test`; a service container would silently skip both and need them
+      restated in YAML, where they would drift from what developers run.
+- [ ] Supply the environment as job-level `env:` rather than writing a `.env`.
+      `loadEnv` reads `process.env` and dotenv does not overwrite what is already
+      set, so real variables win and CI never keeps a fixture file on disk.
+- [ ] Pin Node with `node-version-file: .nvmrc`, so CI and developers cannot drift.
+- [ ] Cancel superseded runs (`concurrency` with `cancel-in-progress`); a new push
+      to a PR makes the in-flight run answer a question nobody is asking.
+- [ ] `permissions: contents: read` — the workflow only needs to read the code.
+- [ ] Add the status badge to `README.md`.
+- [ ] Not in CI yet: Playwright. `npm run test:e2e` is wired up but `e2e/` is
+      empty, so there is nothing to run. Add the job with the suite.
+
+## 12. Deferred
 
 Explicitly out of scope for v1; listed so they don't get silently forgotten.
 
