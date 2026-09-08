@@ -46,13 +46,15 @@ Legend: `[x]` done, `[ ]` not started.
         only syntax, and unlike the old one it is type-checked against the entity.
         Locked in by a regression test in `apps/api/src/database/schema.spec.ts`.
   - [x] House query style, carried over from the Rails-era habits:
-        `ts
+
+    ```ts
     await dataSource.getRepository(PostEntity).findOneOrFail({
       where: { id },
-      relations: { user: true },        // was: ['user']
-      loadEagerRelations: false,        // still supported
+      relations: { user: true }, // was: ['user']
+      loadEagerRelations: false, // still supported
     })
-    `
+    ```
+
   - [x] `select` also moved from array to object form: `select: { id: true, title: true }`.
   - [x] The `join` find option is gone entirely — anything past a simple selected LEFT JOIN
         needs QueryBuilder.
