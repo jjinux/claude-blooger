@@ -388,8 +388,60 @@ Legend: `[x]` done, `[ ]` not started.
 
 ## 10. Documentation
 
+ * [ ] Add a `LICENSE` file.
+   * [ ] **MIT is the one to pick**, unless there is a reason not to. `package.json`
+         already declares `"license": "MIT"`, so right now the repo claims a licence
+         it does not ship — that inconsistency is the actual bug here.
+   * [ ] The choice genuinely does not matter much for this project, and the reason
+         is worth writing down once: MIT and BSD-2-Clause are the same licence in
+         different words. BSD-3-Clause adds a no-endorsement clause. Apache-2.0 is
+         the only one that differs substantively — it grants patent rights
+         explicitly and terminates them if you sue over patents. That matters for a
+         project expecting corporate contributors or containing patentable ideas,
+         and not at all for a blogging engine written for practice.
+   * [ ] Whichever is chosen, keep the `LICENSE` file, the `license` field in
+         `package.json`, and the footer in `README.md` saying the same thing.
+
  * [ ] `README.md` — what the project is, the stack, and how to get it running from a
-       cold clone (nvm, npm install, docker compose up, migrate, seed, dev).
+       cold clone. Aim it at a developer who has just cloned the repo and has none of
+       this set up; assume nothing.
+   * [ ] **Prerequisites**, each with the version actually required and why:
+         nvm, Node 24.20.0 (in `.nvmrc`; `nvm install` reads it), and Docker Desktop.
+         Note that no local MySQL client is needed — `npm run db:shell` goes through
+         the container.
+   * [ ] **Start Docker Desktop first.** This is the step that will actually bite
+         people: `npm run db:up` fails with "Cannot connect to the Docker daemon" if
+         the app is not already running, and the message does not say to launch it.
+         On macOS that is `open -a Docker`, then wait for the whale icon to settle.
+   * [ ] The cold-start sequence, in order, as copy-pasteable commands:
+         `nvm install && nvm use` → `npm install` → `cp .env.example .env` →
+         `npm run db:up` → `npm run migration:run` → `npm run seed` → `npm run dev`.
+   * [ ] Say what each step is for, not just what to type — particularly that
+         `db:up` blocks until MySQL reports healthy, and that `migration:run` is
+         separate on purpose because migrations never run automatically on boot.
+   * [ ] What you get at the end: the SPA on http://localhost:5173, the API on
+         :3000, and the seeded accounts (`admin`, `joe`, `jane`, `quiet`) all with
+         the password `password123`. Say plainly that these are development fixtures.
+   * [ ] `npm run db:reset` as the "I have broken my database" escape hatch, and what
+         it destroys.
+   * [ ] A note that npm 11 declines to run install scripts for `argon2` and
+         `@swc/core`. Both ship prebuilt binaries and work anyway, so the warning is
+         expected and needs no action — worth saying, because it looks alarming.
+   * [ ] **How to run every kind of test**, and what each needs:
+     * [ ] `npm test` — everything. `npm run test:api` and `npm run test:web` for one
+           workspace; `npm run test:watch` inside a workspace while developing.
+     * [ ] The API suite needs MySQL up: it migrates `blooger_test` once per run and
+           truncates between tests. It will not touch `blooger_dev`, but say so
+           explicitly, because that is the first thing a reader worries about.
+     * [ ] The web suite is jsdom-only and needs no database or servers.
+     * [ ] `npm run test:e2e` for Playwright, once it exists, including the
+           `npx playwright install` step people forget.
+     * [ ] `npm run typecheck`, `npm run lint`, and `npm run build` — the same
+           commands CI should run.
+   * [ ] A short troubleshooting section for the failures actually seen while
+         building this: the Docker daemon being down, port 3306 already taken by a
+         local MySQL, and a stale `packages/shared/dist` after switching branches
+         (`npm run build:shared`).
  * [ ] `CLAUDE.md` — the conventions above stated as rules: the TypeORM query style,
        no eager/lazy relations, migrations never auto-run, `synchronize` never true,
        where sanitization lives, how to run tests, and the layout of the workspaces.
