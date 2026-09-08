@@ -8,6 +8,7 @@ import { RateLimitGuard } from './common/rate-limit.guard.js'
 import { AppConfigModule } from './config/config.module.js'
 import { loadEnv } from './config/env.js'
 import { buildDataSourceOptions } from './database/data-source.js'
+import { FeedsModule } from './feeds/feeds.module.js'
 import { HealthController } from './health/health.controller.js'
 import { MarkdownModule } from './markdown/markdown.module.js'
 import { PostsModule } from './posts/posts.module.js'
@@ -24,6 +25,7 @@ import { PostsModule } from './posts/posts.module.js'
     AuthModule,
     PostsModule,
     BloogsModule,
+    FeedsModule,
   ],
   controllers: [HealthController],
   providers: [
