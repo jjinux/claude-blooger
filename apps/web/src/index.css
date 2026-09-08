@@ -1,68 +1,153 @@
 @import 'tailwindcss';
 
 /*
- * Typography for server-rendered post bodies.
+ * Colours sampled from a screenshot of the author's terminal, not eyeballed.
+ * The terminal is almost entirely greyscale with three accents: a periwinkle
+ * blue for inline code, an ochre for the status line, and a cyan cursor block.
  *
- * Tailwind's preflight deliberately strips the default styling from headings,
- * lists, and the rest, which is right for UI but wrong for prose. The HTML inside
- * .prose-blooger comes from MarkdownService and carries no classes of its own, so
- * those defaults have to be put back here. (@tailwindcss/typography would do this
- * too; this is a few dozen lines and avoids the dependency.)
+ * Two of the sampled values cannot be used verbatim on the web:
+ *
+ *   - The terminal's muted grey is #A2A2A2, which is 2.55:1 against white and
+ *     fails WCAG AA. `--ink-faint` is darkened to #767676 (4.54:1) for anything
+ *     a reader has to read; `--ink-ghost` keeps the true value for decoration.
+ *   - The cyan is 2.12:1 and is never used as text, only as a fill. That is what
+ *     the terminal does with it too -- it is a cursor, not a word.
+ *
+ * The terminal palette contains no red at all, so errors and destructive actions
+ * use the ochre. It is the only colour in the scheme that means "look at this".
  */
-.prose-blooger {
-  --prose-gap: 1rem;
-  color: var(--color-slate-700);
-  line-height: 1.75;
+:root {
+  color-scheme: light;
+
+  --canvas: #ffffff;
+  --surface: #f0f0f0;
+  --line: #e8e8e8;
+
+  --ink: #1e1e1e;
+  --ink-dim: #606060;
+  --ink-faint: #767676;
+  --ink-ghost: #a2a2a2;
+
+  --accent: #5062f7;
+  --accent-strong: #4c5ef6;
+  --amber: #916515;
+  --cyan: #00bfff;
 }
 
+/*
+ * Dark is a derivation, not a sample: the source theme is light-only. The
+ * greyscale ramp is inverted, and the two accents are lifted until they clear
+ * 4.5:1 on the dark ground -- the blue at its sampled value is only 3.5:1 there.
+ */
 @media (prefers-color-scheme: dark) {
-  .prose-blooger {
-    color: var(--color-slate-300);
+  :root {
+    color-scheme: dark;
+
+    --canvas: #1e1e1e;
+    --surface: #282828;
+    --line: #383838;
+
+    --ink: #f0f0f0;
+    --ink-dim: #b8b8b8;
+    --ink-faint: #969696;
+    --ink-ghost: #6e6e6e;
+
+    --accent: #7c8bfb;
+    --accent-strong: #9aa5fc;
+    --amber: #c9a227;
+    --cyan: #00bfff;
   }
+}
+
+@theme inline {
+  --font-sans: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+
+  --color-ink: var(--ink);
+  --color-ink-dim: var(--ink-dim);
+  --color-ink-faint: var(--ink-faint);
+  --color-ink-ghost: var(--ink-ghost);
+
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-amber: var(--amber);
+  --color-cyan: var(--cyan);
+}
+
+html {
+  font-family: var(--font-mono);
+  /* Terminals do not ligate. */
+  font-variant-ligatures: none;
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+}
+
+::selection {
+  background: var(--cyan);
+  color: #1e1e1e;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/*
+ * Typography for server-rendered post bodies.
+ *
+ * Tailwind's preflight strips the default styling from headings, lists and the
+ * rest, which is right for UI and wrong for prose. The HTML inside
+ * .prose-blooger comes from MarkdownService and carries no classes of its own,
+ * so those defaults have to be put back here.
+ *
+ * It is monospace like everything else, which is a deliberate choice and a
+ * readability cost. Line-height and measure are set generously to offset it as
+ * far as they can.
+ */
+.prose-blooger {
+  color: var(--ink);
+  line-height: 1.75;
+  max-width: 72ch;
 }
 
 .prose-blooger > * + * {
-  margin-top: var(--prose-gap);
+  margin-top: 1rem;
 }
 
-.prose-blooger h1,
-.prose-blooger h2,
-.prose-blooger h3,
-.prose-blooger h4,
-.prose-blooger h5,
-.prose-blooger h6 {
-  color: var(--color-slate-900);
+.prose-blooger :is(h1, h2, h3, h4, h5, h6) {
+  color: var(--ink);
   font-weight: 700;
-  line-height: 1.3;
+  line-height: 1.35;
   margin-top: 1.75rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  .prose-blooger :is(h1, h2, h3, h4, h5, h6) {
-    color: var(--color-slate-50);
-  }
-}
-
 .prose-blooger h1 {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
 }
 .prose-blooger h2 {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
 }
 .prose-blooger h3 {
-  font-size: 1.15rem;
+  font-size: 1.05rem;
+}
+
+/* Headings read as section markers, the way a shell prompt does. */
+.prose-blooger :is(h1, h2, h3)::before {
+  content: '## ';
+  color: var(--ink-ghost);
 }
 
 .prose-blooger a {
-  color: var(--color-sky-700);
+  color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 2px;
-}
-
-@media (prefers-color-scheme: dark) {
-  .prose-blooger a {
-    color: var(--color-sky-400);
-  }
 }
 
 .prose-blooger strong {
@@ -78,39 +163,42 @@
 }
 
 .prose-blooger ul {
-  list-style: disc;
+  list-style: none;
 }
+
+/* A dash, like a terminal bullet, rather than a typographic disc. */
+.prose-blooger ul > li::before {
+  content: '- ';
+  color: var(--ink-ghost);
+  margin-left: -1.25rem;
+}
+
 .prose-blooger ol {
   list-style: decimal;
 }
+
 .prose-blooger li + li {
   margin-top: 0.25rem;
 }
 
 .prose-blooger blockquote {
-  border-left: 3px solid var(--color-slate-300);
+  border-left: 2px solid var(--line);
   padding-left: 1rem;
-  font-style: italic;
-  color: var(--color-slate-600);
-}
-
-@media (prefers-color-scheme: dark) {
-  .prose-blooger blockquote {
-    border-left-color: var(--color-slate-700);
-    color: var(--color-slate-400);
-  }
+  color: var(--ink-dim);
 }
 
 .prose-blooger code {
-  background: var(--color-slate-100);
-  border-radius: 0.25rem;
+  background: var(--surface);
+  border-radius: 2px;
   padding: 0.1em 0.35em;
-  font-size: 0.9em;
+  font-size: 0.925em;
+  color: var(--accent);
 }
 
 .prose-blooger pre {
-  background: var(--color-slate-100);
-  border-radius: 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 2px;
   padding: 1rem;
   /* Long lines scroll inside the block rather than widening the page. */
   overflow-x: auto;
@@ -119,30 +207,18 @@
 .prose-blooger pre code {
   background: none;
   padding: 0;
+  color: var(--ink);
   font-size: 0.875rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  .prose-blooger :is(code, pre) {
-    background: var(--color-slate-800);
-  }
-}
-
 .prose-blooger hr {
-  border-top: 1px solid var(--color-slate-200);
+  border-top: 1px solid var(--line);
   margin-block: 2rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  .prose-blooger hr {
-    border-top-color: var(--color-slate-800);
-  }
 }
 
 .prose-blooger img {
   max-width: 100%;
   height: auto;
-  border-radius: 0.5rem;
 }
 
 .prose-blooger table {
@@ -152,17 +228,11 @@
 }
 
 .prose-blooger :is(th, td) {
-  border: 1px solid var(--color-slate-200);
+  border: 1px solid var(--line);
   padding: 0.5rem 0.75rem;
   text-align: left;
 }
 
 .prose-blooger th {
-  font-weight: 600;
-}
-
-@media (prefers-color-scheme: dark) {
-  .prose-blooger :is(th, td) {
-    border-color: var(--color-slate-800);
-  }
+  font-weight: 700;
 }
