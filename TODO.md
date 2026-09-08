@@ -335,11 +335,13 @@ Legend: `[x]` done, `[ ]` not started.
   - [x] Derive a dark variant by inverting the greyscale ramp and lifting the blue
         and amber until they clear 4.5:1 on the dark ground.
   - [x] The terminal palette contains no red. Seeing it on screen settled it:
-        destructive actions now use a red that is deliberately _not_ sampled --
-        ANSI red `#CC0000` in light, ANSI bright red `#FF5555` in dark, both
-        comfortably past 4.5:1. Errors and validation keep the ochre, so the two
-        signals stay distinct: amber means "read this", red means "this destroys
-        data".
+        errors and destructive actions both use a red that is deliberately _not_
+        sampled -- ANSI red `#CC0000` in light, ANSI bright red `#FF5555` in dark,
+        both comfortably past 4.5:1 in either theme.
+    - [x] The terminal's ochre is therefore unused and its token was removed rather
+          than left as dead CSS. The value is recorded in the comment in `index.css`
+          so it can come back if a genuine warning tier ever appears -- something
+          that is neither an error nor destructive.
   - [x] Drive the tokens through CSS custom properties with Tailwind's `@theme
 inline`, so light and dark are one set of names and not two sets of classes.
   - [x] Verified in a browser in both themes. A contrast audit against the live

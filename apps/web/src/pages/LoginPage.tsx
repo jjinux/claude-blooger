@@ -56,7 +56,7 @@ export function LoginPage() {
         {/* The server deliberately gives one message for both a bad username and a
             bad password, so there is nothing more specific to show here. */}
         {error && error.fieldErrors.length === 0 && (
-          <p role="alert" className="text-sm text-amber">
+          <p role="alert" className="text-sm text-red">
             {error.message}
           </p>
         )}
