@@ -1,5 +1,7 @@
 # Blooger
 
+[![CI](https://github.com/jjinux/claude-blooger/actions/workflows/ci.yml/badge.svg)](https://github.com/jjinux/claude-blooger/actions/workflows/ci.yml)
+
 A small multi-user blogging engine. Everyone who registers gets their own
 "bloog": a titled blog with its own posts and its own feed.
 
@@ -132,16 +134,34 @@ installed first, which is the step everybody forgets:
 npx playwright install
 ```
 
-The same three checks CI should run:
+And the checks that are not tests:
 
 ```sh
 npm run typecheck       # all workspaces
 npm run lint            # ESLint
+npm run format:check    # Prettier, report only
 npm run build           # shared, then web, then api
 ```
 
-`npm run format` rewrites files with Prettier; `npm run format:check` only
-reports.
+`npm run format` rewrites the files that `format:check` complains about.
+
+## CI
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push to
+`main` and every pull request, in three jobs so a failure names itself:
+
+| Job                            | Runs                                         | Needs   |
+| ------------------------------ | -------------------------------------------- | ------- |
+| Format, lint, typecheck, build | `format:check`, `lint`, `typecheck`, `build` | nothing |
+| Web tests                      | `test:web`                                   | nothing |
+| API tests                      | `test:api`                                   | MySQL   |
+
+The API job boots MySQL from this repo's own `docker-compose.yml`, so it gets
+the same healthcheck and the same `blooger_test` init script you get locally.
+Node comes from `.nvmrc`, so CI cannot drift away from your machine.
+
+Everything CI runs, you can run yourself with the commands above — there is no
+step that only exists in the workflow.
 
 ## Database
 
