@@ -1,3 +1,4 @@
+import { CSRF_HEADER, type PublicUser, type SessionResponse } from '@blooger/shared'
 import type { INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import supertest from 'supertest'
@@ -7,6 +8,7 @@ import { AppModule } from '../src/app.module.js'
 import { configureApp } from '../src/bootstrap.js'
 import { RateLimitGuard } from '../src/common/rate-limit.guard.js'
 import { loadEnv } from '../src/config/env.js'
+import { UserEntity } from '../src/users/user.entity.js'
 
 export interface TestApp {
   app: INestApplication
@@ -15,6 +17,8 @@ export interface TestApp {
   agent: TestAgent
   close: () => Promise<void>
   resetRateLimits: () => void
+  /** A second, independent cookie jar -- for tests that need two logged-in users. */
+  newAgent: () => TestAgent
 }
 
 /**
@@ -40,6 +44,7 @@ export async function createTestApp(): Promise<TestApp> {
     agent: supertest.agent(app.getHttpServer()),
     close: () => app.close(),
     resetRateLimits: () => rateLimiter.reset(),
+    newAgent: () => supertest.agent(app.getHttpServer()),
   }
 }
 
@@ -101,4 +106,48 @@ export async function withRollback(
 export async function bootstrapCsrf(agent: TestAgent): Promise<string> {
   const response = await agent.get('/api/me').expect(200)
   return (response.body as { csrfToken: string }).csrfToken
+}
+
+export interface TestUser {
+  username: string
+  password: string
+  bloogTitle: string
+  user: PublicUser
+  /** Valid for this agent until its session is regenerated again. */
+  csrfToken: string
+}
+
+/**
+ * Registers an account, which also logs the agent in. Returns the CSRF token
+ * issued by that registration, so callers do not have to re-bootstrap.
+ */
+export async function registerUser(
+  agent: TestAgent,
+  overrides: Partial<Pick<TestUser, 'username' | 'password' | 'bloogTitle'>> = {},
+): Promise<TestUser> {
+  const credentials = {
+    username: overrides.username ?? 'joe',
+    password: overrides.password ?? 'correct horse battery',
+    bloogTitle: overrides.bloogTitle ?? "Joe's Bloog",
+  }
+
+  const csrfToken = await bootstrapCsrf(agent)
+  const response = await agent
+    .post('/api/users')
+    .set(CSRF_HEADER, csrfToken)
+    .send(credentials)
+    .expect(201)
+
+  const body = response.body as SessionResponse
+  if (!body.user) throw new Error('registration returned no user')
+
+  return { ...credentials, user: body.user, csrfToken: body.csrfToken }
+}
+
+/**
+ * Registration always creates a non-admin. Admin rights are granted out of band,
+ * so tests that need one write the flag directly.
+ */
+export async function promoteToAdmin(dataSource: DataSource, username: string): Promise<void> {
+  await dataSource.getRepository(UserEntity).update({ username }, { isAdmin: true })
 }
