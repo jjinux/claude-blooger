@@ -4,7 +4,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { RequireAuth } from './guards'
 import { mockFetch, renderWithProviders, SESSION_ANON, SESSION_JOE, USER_JOE } from '../test/render'
 
-function renderGuarded({ admin = false, route = '/private' }: { admin?: boolean; route?: string } = {}) {
+function renderGuarded({
+  admin = false,
+  route = '/private',
+}: { admin?: boolean; route?: string } = {}) {
   renderWithProviders(
     <Routes>
       <Route path="/login" element={<p>login page</p>} />

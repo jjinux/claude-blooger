@@ -1,4 +1,9 @@
-import { type CanActivate, type ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common'
+import {
+  type CanActivate,
+  type ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common'
 import type { Request } from 'express'
 import { UsersService } from '../../users/users.service.js'
 import { destroySession } from '../session.helpers.js'

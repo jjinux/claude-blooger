@@ -81,7 +81,8 @@ export function useBloogs(page: number) {
 export function useBloog(username: string, page: number) {
   return useQuery({
     queryKey: queryKeys.bloog(username, page),
-    queryFn: () => api.get<BloogWithPosts>(`/api/bloogs/${encodeURIComponent(username)}${pageQuery(page)}`),
+    queryFn: () =>
+      api.get<BloogWithPosts>(`/api/bloogs/${encodeURIComponent(username)}${pageQuery(page)}`),
     enabled: username.length > 0,
   })
 }
@@ -116,11 +117,15 @@ function useSessionMutation<TInput>(send: (input: TInput) => Promise<SessionResp
 }
 
 export function useLogin() {
-  return useSessionMutation((input: LoginInput) => api.post<SessionResponse>('/api/sessions', input))
+  return useSessionMutation((input: LoginInput) =>
+    api.post<SessionResponse>('/api/sessions', input),
+  )
 }
 
 export function useRegister() {
-  return useSessionMutation((input: RegisterInput) => api.post<SessionResponse>('/api/users', input))
+  return useSessionMutation((input: RegisterInput) =>
+    api.post<SessionResponse>('/api/users', input),
+  )
 }
 
 export function useLogout() {

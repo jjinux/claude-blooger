@@ -14,9 +14,7 @@ export function HomePage() {
       {isPending && <Spinner />}
       {error && <ErrorState error={error} onRetry={() => void refetch()} />}
 
-      {data && data.items.length === 0 && (
-        <EmptyState>There are no bloog posts yet.</EmptyState>
-      )}
+      {data && data.items.length === 0 && <EmptyState>There are no bloog posts yet.</EmptyState>}
 
       {data && data.items.length > 0 && (
         <>

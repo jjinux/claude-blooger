@@ -18,7 +18,8 @@ export function NewPostPage() {
           error={create.error}
           onSubmit={(values) => {
             create.mutate(values, {
-              onSuccess: (post) => void navigate(`/bloogs/${post.author.username}/posts/${post.id}`),
+              onSuccess: (post) =>
+                void navigate(`/bloogs/${post.author.username}/posts/${post.id}`),
             })
           }}
         />

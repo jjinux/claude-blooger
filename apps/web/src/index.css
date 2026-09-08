@@ -43,9 +43,15 @@
   }
 }
 
-.prose-blooger h1 { font-size: 1.5rem; }
-.prose-blooger h2 { font-size: 1.3rem; }
-.prose-blooger h3 { font-size: 1.15rem; }
+.prose-blooger h1 {
+  font-size: 1.5rem;
+}
+.prose-blooger h2 {
+  font-size: 1.3rem;
+}
+.prose-blooger h3 {
+  font-size: 1.15rem;
+}
 
 .prose-blooger a {
   color: var(--color-sky-700);
@@ -54,20 +60,32 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .prose-blooger a { color: var(--color-sky-400); }
+  .prose-blooger a {
+    color: var(--color-sky-400);
+  }
 }
 
-.prose-blooger strong { font-weight: 700; }
-.prose-blooger em { font-style: italic; }
+.prose-blooger strong {
+  font-weight: 700;
+}
+.prose-blooger em {
+  font-style: italic;
+}
 
 .prose-blooger ul,
 .prose-blooger ol {
   padding-left: 1.5rem;
 }
 
-.prose-blooger ul { list-style: disc; }
-.prose-blooger ol { list-style: decimal; }
-.prose-blooger li + li { margin-top: 0.25rem; }
+.prose-blooger ul {
+  list-style: disc;
+}
+.prose-blooger ol {
+  list-style: decimal;
+}
+.prose-blooger li + li {
+  margin-top: 0.25rem;
+}
 
 .prose-blooger blockquote {
   border-left: 3px solid var(--color-slate-300);
@@ -116,7 +134,9 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .prose-blooger hr { border-top-color: var(--color-slate-800); }
+  .prose-blooger hr {
+    border-top-color: var(--color-slate-800);
+  }
 }
 
 .prose-blooger img {
@@ -137,8 +157,12 @@
   text-align: left;
 }
 
-.prose-blooger th { font-weight: 600; }
+.prose-blooger th {
+  font-weight: 600;
+}
 
 @media (prefers-color-scheme: dark) {
-  .prose-blooger :is(th, td) { border-color: var(--color-slate-800); }
+  .prose-blooger :is(th, td) {
+    border-color: var(--color-slate-800);
+  }
 }

@@ -11,7 +11,13 @@ import { RateLimit } from '../common/rate-limit.guard.js'
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js'
 import { toPublicUser, UsersService } from '../users/users.service.js'
 import { AuthService } from './auth.service.js'
-import { ensureCsrfToken, destroySession, newCsrfToken, regenerateSession, saveSession } from './session.helpers.js'
+import {
+  ensureCsrfToken,
+  destroySession,
+  newCsrfToken,
+  regenerateSession,
+  saveSession,
+} from './session.helpers.js'
 
 // RateLimitGuard is registered globally in AppModule, so listing it in
 // @UseGuards here as well would run it twice per request -- double-counting every

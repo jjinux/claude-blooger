@@ -188,10 +188,7 @@ describe('posts', () => {
     it('lets the author delete their own post', async () => {
       const created = (await create().expect(201)).body as PostDetail
 
-      await ctx.agent
-        .delete(`/api/posts/${created.id}`)
-        .set(CSRF_HEADER, joe.csrfToken)
-        .expect(204)
+      await ctx.agent.delete(`/api/posts/${created.id}`).set(CSRF_HEADER, joe.csrfToken).expect(204)
 
       await ctx.agent.get(`/api/posts/${created.id}`).expect(404)
     })

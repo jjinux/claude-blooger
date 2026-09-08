@@ -14,7 +14,8 @@ export function PostPage() {
   const navigate = useNavigate()
 
   // Mirrors the server's rule; the API is what actually enforces it.
-  const mayEdit = user !== null && post !== undefined && (user.isAdmin || user.username === post.author.username)
+  const mayEdit =
+    user !== null && post !== undefined && (user.isAdmin || user.username === post.author.username)
 
   async function handleDelete() {
     if (!post) return

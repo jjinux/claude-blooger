@@ -5,7 +5,7 @@ export function snakeCase(input: string): string {
   return input
     .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
     .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2')
-    .replace(/[\s.\-]+/g, '_')
+    .replace(/[\s.-]+/g, '_')
     .toLowerCase()
 }
 
@@ -22,7 +22,11 @@ export class SnakeNamingStrategy extends DefaultNamingStrategy implements Naming
 
   // `customName` is declared as `string` upstream but is undefined in practice
   // whenever @Column() was given no explicit name.
-  override columnName(propertyName: string, customName: string, embeddedPrefixes: string[]): string {
+  override columnName(
+    propertyName: string,
+    customName: string,
+    embeddedPrefixes: string[],
+  ): string {
     const prefix = embeddedPrefixes.length > 0 ? `${snakeCase(embeddedPrefixes.join('_'))}_` : ''
     return prefix + (customName ? customName : snakeCase(propertyName))
   }
@@ -41,14 +45,24 @@ export class SnakeNamingStrategy extends DefaultNamingStrategy implements Naming
     firstPropertyName: string,
     _secondPropertyName: string,
   ): string {
-    return snakeCase(`${firstTableName}_${firstPropertyName.replace(/\./g, '_')}_${secondTableName}`)
+    return snakeCase(
+      `${firstTableName}_${firstPropertyName.replace(/\./g, '_')}_${secondTableName}`,
+    )
   }
 
-  override joinTableColumnName(tableName: string, propertyName: string, columnName?: string): string {
+  override joinTableColumnName(
+    tableName: string,
+    propertyName: string,
+    columnName?: string,
+  ): string {
     return snakeCase(`${tableName}_${columnName ?? propertyName}`)
   }
 
-  override joinTableInverseColumnName(tableName: string, propertyName: string, columnName?: string): string {
+  override joinTableInverseColumnName(
+    tableName: string,
+    propertyName: string,
+    columnName?: string,
+  ): string {
     return this.joinTableColumnName(tableName, propertyName, columnName)
   }
 }
