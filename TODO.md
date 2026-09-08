@@ -90,7 +90,7 @@ Legend: `[x]` done, `[ ]` not started.
 - [x] Root `package.json` with simple scripts:
   - [x] `npm run dev` — DB up, then API and web dev servers concurrently.
   - [x] `npm run build`, `npm start` (prod: Nest serving the built SPA).
-  - [ ] `npm test` (unit + integration), `npm run test:e2e` (Playwright).
+  - [x] `npm test` (unit + integration), `npm run test:e2e` (Playwright).
   - [x] `npm run db:up` / `db:down` / `db:nuke` / `db:reset` / `db:shell` / `db:logs`.
         `db:reset` verified from a destroyed volume: recreate, wait healthy, migrate, seed.
   - [x] `npm run migration:generate -- <Name>`, `migration:run`, `migration:revert`.
@@ -428,21 +428,61 @@ inline`, so light and dark are one set of names and not two sets of classes.
 - [x] Verified in a real browser: rendering, login, post authoring, and that a
       `<script>` in a post body reaches the DOM as inert text — 0 script elements
       and 0 `on*` attributes inside the rendered body.
-- [ ] Note for the Playwright suite: driving the forms through the Chrome
+- [x] Note for the Playwright suite: driving the forms through the Chrome
       extension did not work, in two distinct ways.
-  - [ ] Setting an input's value through the DOM does not drive a React controlled
+  - [x] Setting an input's value through the DOM does not drive a React controlled
         input -- React never sees an `onChange`, so component state stays empty and
         the form submits blanks. The workaround is the native value setter plus a
         synthetic `input` event; Playwright's `fill()` does the right thing itself.
-  - [ ] Synthetic keystrokes never reached the page at all: the field took focus
+        Confirmed: `fill()` drove every form in the suite first time.
+  - [x] Synthetic keystrokes never reached the page at all: the field took focus
         but its value stayed empty. Reproduced in a clean Chrome profile with no
         extensions installed, so this is not extension interference -- an earlier
         guess that Grammarly and 1Password were swallowing the input was wrong.
-- [ ] Playwright, a handful of flows only:
-  - [ ] Register → log in → create a post → see it on the homepage → fetch the Atom feed.
-  - [ ] Admin logs in, reaches `/admin`; a normal user gets 403.
-- [ ] Test factories for users and posts (the `factory_girl` equivalent).
+- [x] Playwright, four flows only. Chromium only: this proves the stack fits
+      together, it is not a browser-compatibility matrix.
+  - [x] Register → publish a post → see it on the homepage → fetch the Atom feed.
+  - [x] Admin logs in and reaches `/admin`.
+  - [x] A normal user is refused -- and the assertion that matters is that
+        `/api/admin/users` answers 403, not that the nav link is hidden. Hiding
+        the link proves nothing; `AdminGuard` is the boundary.
+  - [x] A `<script>` in a post body reaches the DOM as inert text: no `script`
+        element, no `on*` attribute, no `javascript:` href, and `window.__pwned`
+        still undefined. The jsdom specs cannot prove that last one.
+- [x] `playwright.config.ts` runs the pair on **3100 and 5273**, not 3000 and 5173.
+      Two reasons, both real: the suite can run beside `npm run dev`, and it can
+      never silently attach to a development API pointed at `blooger_dev` and
+      rewrite real data. `vite.config.ts` reads `WEB_PORT` and `API_ORIGIN` to
+      make that possible, with `strictPort` so a busy port fails loudly instead of
+      sliding to the next one and leaving Playwright waiting on nothing.
+- [x] `reuseExistingServer: false`. The rate limiter counts in process memory, so
+      a server left over from an earlier run starts the suite part-way through its
+      window.
+- [x] Retries capped at 1 in CI, for the same reason: registration allows 5
+      attempts per minute per IP and login 10, and every request here comes from
+      127.0.0.1. A generous retry budget turns one flake into a wall of 429s.
+- [x] **The trap this cost an hour on: `tsx` cannot run the Nest app.** It
+      transforms with esbuild, which does not implement `emitDecoratorMetadata`,
+      so constructor injection resolves every dependency to `undefined` and the
+      first guarded request dies with "Cannot read properties of undefined
+      (reading 'getAllAndOverride')" from inside `RateLimitGuard`. The webServer
+      command is `nest start`. The seed and the TypeORM CLI stay fine under `tsx`
+      because neither goes through Nest's DI, and no column type here is inferred
+      from reflected metadata.
+- [x] Dev mode, not production, and not by preference: `main.ts` only serves the
+      SPA itself when `NODE_ENV` is production, and a production session cookie is
+      `secure`, which plain http drops. A single-origin production run therefore
+      cannot log anybody in locally.
+- [x] `e2e/global-setup.ts` shells out to the repo's own `migration:run` and
+      `seed`, so the suite prepares its database exactly the way a developer does.
+      One worker, no truncation between specs, so registrations use
+      `uniqueUsername()`; a fixed name passes on a fresh database and fails with
+      "already taken" on the second run.
+- [ ] Test factories for users and posts (the `factory_girl` equivalent). The
+      seed plus `uniqueUsername()` has been enough so far.
 - [ ] CI-ready: one command that boots MySQL, migrates, and runs everything.
+      `npm run test:e2e` is that command for the browser flows; `npm test` still
+      expects MySQL to be up already.
 
 ## 10. Documentation
 
@@ -540,8 +580,13 @@ inline`, so light and dark are one set of names and not two sets of classes.
       to a PR makes the in-flight run answer a question nobody is asking.
 - [x] `permissions: contents: read` — the workflow only needs to read the code.
 - [x] Add the status badge to `README.md`.
-- [ ] Not in CI yet: Playwright. `npm run test:e2e` is wired up but `e2e/` is
-      empty, so there is nothing to run. Add the job with the suite.
+- [x] A fourth job for Playwright, added with the suite itself: installs Chromium
+      with `--with-deps`, boots MySQL, and uploads the HTML report as an artifact
+      when it fails.
+  - [x] No job-level `NODE_ENV` on that one. `playwright.config.ts` sets it for
+        the API server and the global setup sets it for the migration and the
+        seed; setting it job-wide would also hand it to the Vite dev server,
+        which has no business being told this is a test run.
 - [x] Green on the first run: static 24s, web 20s, API 1m9s — 108 API specs and
       27 web specs, the same counts as locally. Two things that could have bitten
       did not: the runner's own MySQL does not hold port 3306, and `argon2`

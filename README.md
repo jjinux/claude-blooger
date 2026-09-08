@@ -110,7 +110,7 @@ MySQL needs to be running for the API tests. Nothing else does.
 npm test                # everything: 108 API tests, 27 web tests
 npm run test:api        # API only
 npm run test:web        # web only
-npm run test:e2e        # Playwright (see below)
+npm run test:e2e        # Playwright (see below)  -- needs MySQL too
 ```
 
 To iterate on one workspace, use watch mode inside it:
@@ -127,12 +127,25 @@ per run and truncates the tables between tests. It never touches
 **The web suite needs nothing running.** It is jsdom-only, with `fetch`
 stubbed.
 
-**Playwright is not written yet.** When it is, it will need a browser
-installed first, which is the step everybody forgets:
+**The end-to-end suite needs MySQL and a browser.** Install the browser once —
+this is the step everybody forgets:
 
 ```sh
-npx playwright install
+npx playwright install chromium
 ```
+
+Then `npm run test:e2e` does the rest: it migrates and seeds `blooger_test`,
+starts the API and the Vite dev server itself, and stops them when it is done.
+It runs them on ports 3100 and 5273 rather than the usual 3000 and 5173, so you
+do not have to shut down `npm run dev` first — and so it can never end up
+talking to a development server pointed at `blooger_dev`.
+
+Four flows, deliberately: register and publish a post and find it in the feed,
+an admin reaching `/admin`, a normal user being refused it by the API rather
+than only by the UI, and a `<script>` in a post body arriving as inert text.
+
+Do not run `npm run test:api` and `npm run test:e2e` at the same time. Both own
+`blooger_test`, and the API suite truncates it between tests.
 
 And the checks that are not tests:
 
@@ -148,16 +161,18 @@ npm run build           # shared, then web, then api
 ## CI
 
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push to
-`main` and every pull request, in three jobs so a failure names itself:
+`main` and every pull request, in four jobs so a failure names itself:
 
-| Job                            | Runs                                         | Needs   |
-| ------------------------------ | -------------------------------------------- | ------- |
-| Format, lint, typecheck, build | `format:check`, `lint`, `typecheck`, `build` | nothing |
-| Web tests                      | `test:web`                                   | nothing |
-| API tests                      | `test:api`                                   | MySQL   |
+| Job                            | Runs                                         | Needs            |
+| ------------------------------ | -------------------------------------------- | ---------------- |
+| Format, lint, typecheck, build | `format:check`, `lint`, `typecheck`, `build` | nothing          |
+| Web tests                      | `test:web`                                   | nothing          |
+| API tests                      | `test:api`                                   | MySQL            |
+| End-to-end tests               | `test:e2e`                                   | MySQL + Chromium |
 
-The API job boots MySQL from this repo's own `docker-compose.yml`, so it gets
-the same healthcheck and the same `blooger_test` init script you get locally.
+The two database jobs boot MySQL from this repo's own `docker-compose.yml`, so
+they get the same healthcheck and the same `blooger_test` init script you get
+locally.
 Node comes from `.nvmrc`, so CI cannot drift away from your machine.
 
 Everything CI runs, you can run yourself with the commands above — there is no

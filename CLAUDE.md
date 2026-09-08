@@ -17,6 +17,13 @@ Everything is **ESM**, including `packages/shared`. Consequences:
 - Relative imports need explicit `.js` extensions, even from `.ts` files.
 - There is no `__dirname`. Use `import.meta.dirname`.
 - `tsx` runs TypeScript directly (the seed, the TypeORM CLI). `ts-node` is not used.
+- **`tsx` cannot run the Nest app.** It transforms with esbuild, which does not
+  implement `emitDecoratorMetadata`, so constructor injection resolves every
+  dependency to `undefined` — the first guarded request dies with "Cannot read
+  properties of undefined (reading 'getAllAndOverride')". Run the API with
+  `nest start` (tsc) or from `dist/`. The seed and the CLI are fine under `tsx`
+  because neither goes through Nest's DI, and TypeORM here does not lean on
+  reflected metadata: every column type is declared explicitly.
 
 `packages/shared` compiles to `dist/`, so a stale build causes
 "Cannot find module '@blooger/shared'" or nonsense type errors after a branch
@@ -170,6 +177,7 @@ and cost nothing.
 npm test                # everything
 npm run test:api        # needs MySQL up
 npm run test:web        # jsdom only, needs nothing
+npm run test:e2e        # Playwright; needs MySQL and `npx playwright install chromium`
 ```
 
 The API suite migrates `blooger_test` once per run via Vitest `globalSetup` and
@@ -200,6 +208,31 @@ Write tests that assert the property, not the string. The XSS specs check the
 emitted _tags_, because an escaped payload still contains the characters
 "script" as harmless visible text — and on a blog engine, someone will
 legitimately write about `<script>` one day.
+
+### End-to-end
+
+`playwright.config.ts` starts the API and the Vite dev server itself, on **3100
+and 5273** rather than 3000 and 5173. Two reasons, and both matter: the suite
+can run beside `npm run dev`, and it can never silently attach to a development
+API pointed at `blooger_dev` and rewrite real data. `reuseExistingServer` is
+`false` for the same kind of reason — the rate limiter counts in process memory,
+so a reused server starts the run part-way through its window.
+
+- `e2e/global-setup.ts` migrates and seeds `blooger_test` by shelling out to the
+  repo's own `migration:run` and `seed` scripts, so the suite prepares its
+  database the same way a developer does. `blooger_test` is also the API suite's
+  database, so the two must not run at once.
+- **One worker, no truncation between specs.** Anything a test creates outlives
+  it, which is why registrations use `uniqueUsername()` — a fixed name passes on
+  a fresh database and fails with "already taken" on the second run.
+- **Retries are capped at 1, on purpose.** Registration allows 5 attempts per
+  minute per IP and login 10, and every request here comes from `127.0.0.1`; a
+  generous retry budget turns one flake into a wall of 429s.
+- Drive inputs with Playwright's `fill()`. Assigning `.value` through the DOM
+  does not update a React controlled input — the component's state stays empty
+  and the form submits blanks.
+- Assert against the API, not just the UI: the admin spec checks that
+  `/api/admin/users` answers 403, because hiding the nav link proves nothing.
 
 ## Workflow
 
