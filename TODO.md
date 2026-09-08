@@ -327,10 +327,19 @@ Legend: `[x]` done, `[ ]` not started.
         2.55:1 against white and `#00BFFF` is 2.12:1, both below WCAG AA. Darken the
         muted grey for anything readable; keep cyan for fills only.
   - [x] JetBrains Mono from Google Fonts, everything monospace including post bodies.
+    - [x] Monospace prose is measurably harder to read at length, which normally
+          matters a great deal for a blog. Closed as a non-issue by decision: this
+          is a proof of concept, not something people will read daily. Line-height
+          1.75 and a 72ch measure are in place regardless. Revisit only if the
+          project ever stops being a practice exercise.
   - [x] Derive a dark variant by inverting the greyscale ramp and lifting the blue
         and amber until they clear 4.5:1 on the dark ground.
-  - [x] The terminal palette contains no red, so errors and destructive actions use
-        amber. Worth a second look once it is on screen.
+  - [x] The terminal palette contains no red. Seeing it on screen settled it:
+        destructive actions now use a red that is deliberately _not_ sampled --
+        ANSI red `#CC0000` in light, ANSI bright red `#FF5555` in dark, both
+        comfortably past 4.5:1. Errors and validation keep the ochre, so the two
+        signals stay distinct: amber means "read this", red means "this destroys
+        data".
   - [x] Drive the tokens through CSS custom properties with Tailwind's `@theme
 inline`, so light and dark are one set of names and not two sets of classes.
   - [x] Verified in a browser in both themes. A contrast audit against the live
