@@ -318,6 +318,30 @@ Legend: `[x]` done, `[ ]` not started.
       one renderer, one sanitizer, no second attack surface.
 - [x] Loading, empty, and error states for every list.
 - [x] Dark mode, since Tailwind makes it nearly free.
+- [x] **Terminal theme.** Restyle the site after the colours and font of the author's
+      terminal, sampled from a screenshot rather than guessed at.
+  - [x] Palette, read out of the screenshot pixel by pixel: canvas `#FFFFFF`,
+        surface `#F0F0F0`, line `#E8E8E8`, ink `#1E1E1E`, dim `#606060`,
+        faint `#A2A2A2`, blue `#5062F7`, amber `#916515`, cyan `#00BFFF`.
+  - [x] Two of those fail on the web and must not be used verbatim: `#A2A2A2` is
+        2.55:1 against white and `#00BFFF` is 2.12:1, both below WCAG AA. Darken the
+        muted grey for anything readable; keep cyan for fills only.
+  - [x] JetBrains Mono from Google Fonts, everything monospace including post bodies.
+  - [x] Derive a dark variant by inverting the greyscale ramp and lifting the blue
+        and amber until they clear 4.5:1 on the dark ground.
+  - [x] The terminal palette contains no red, so errors and destructive actions use
+        amber. Worth a second look once it is on screen.
+  - [x] Drive the tokens through CSS custom properties with Tailwind's `@theme
+inline`, so light and dark are one set of names and not two sets of classes.
+  - [x] Verified in a browser in both themes. A contrast audit against the live
+        page found zero WCAG AA failures: the lowest is 4.54:1 in light (the
+        darkened muted grey, passing by design) and 5.51:1 in dark.
+  - [x] Caught only by loading the page: `bg-white` survived the palette sweep
+        because it was not adjacent to its `dark:` partner in the class string, so
+        the background stayed white while the text went light and the page was
+        nearly unreadable. Every test still passed.
+  - [x] Primary buttons use `text-canvas`, not `text-white`. White on the lifted
+        dark-mode blue is only 3.03:1; inverting with the theme holds it at 5.5:1.
 - [x] Nest serves the built SPA in production, with a fallback so a hard refresh on
       a client-side route works. Both handlers are registered before Nest's router;
       the fallback passes through `/api/*` and anything with a file extension, so
