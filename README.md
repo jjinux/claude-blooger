@@ -141,7 +141,7 @@ npm run build           # shared, then web, then api
 ```
 
 `npm run format` rewrites files with Prettier; `npm run format:check` only
-reports. `TODO.md` is excluded, because Prettier rewrites its checkbox bullets.
+reports.
 
 ## Database
 
