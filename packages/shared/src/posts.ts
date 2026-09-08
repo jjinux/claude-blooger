@@ -1,9 +1,5 @@
 import { z } from 'zod'
-import type { Page } from './pagination'
-
-export const POST_TITLE_MAX_LENGTH = 255
-/** Generous, but bounded: `body` is a MySQL TEXT column (65,535 bytes). */
-export const POST_BODY_MAX_LENGTH = 60_000
+import { POST_BODY_MAX_LENGTH, POST_TITLE_MAX_LENGTH } from './constants.js'
 
 /**
  * `.trim()` is the equivalent of the Rails app's `strip_attributes`: it stops a
@@ -28,35 +24,3 @@ export const updatePostSchema = z
     path: [],
   })
 export type UpdatePostInput = z.infer<typeof updatePostSchema>
-
-export interface PostAuthor {
-  username: string
-  bloogTitle: string
-}
-
-export interface PostSummary {
-  id: number
-  title: string
-  /** Rendered and sanitized on the server. The SPA never parses Markdown. */
-  bodyHtml: string
-  createdAt: string
-  updatedAt: string
-  author: PostAuthor
-}
-
-/** Adds the Markdown source, which only the edit form needs. */
-export interface PostDetail extends PostSummary {
-  body: string
-}
-
-export interface BloogSummary {
-  username: string
-  bloogTitle: string
-  postCount: number
-  latestPostAt: string | null
-}
-
-export interface BloogWithPosts {
-  bloog: BloogSummary
-  posts: Page<PostSummary>
-}
