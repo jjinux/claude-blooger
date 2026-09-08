@@ -78,7 +78,7 @@ export function RegisterPage() {
 
         {/* A taken username comes back as a 409 with no field attached. */}
         {error && error.fieldErrors.length === 0 && (
-          <p role="alert" className="text-sm text-amber">
+          <p role="alert" className="text-sm text-red">
             {error.message}
           </p>
         )}

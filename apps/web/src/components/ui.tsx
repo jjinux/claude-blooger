@@ -19,8 +19,8 @@ const VARIANTS = {
   primary: 'border-accent bg-accent text-canvas hover:bg-accent-strong hover:border-accent-strong',
   secondary: 'border-line bg-surface text-ink hover:border-ink-faint',
   // Red is the one colour not sampled from the terminal -- the screenshot had
-  // none. Amber stays for errors and warnings, so the two signals read
-  // differently: amber means "read this", red means "this destroys data".
+  // none -- and it carries every negative signal here: errors as well as
+  // destruction.
   danger: 'border-red bg-transparent text-red hover:bg-red hover:text-canvas',
 } as const
 
@@ -70,7 +70,7 @@ export function Field({ label, htmlFor, error, hint, children }: FieldProps) {
       {hint && !error && <p className="text-xs text-ink-faint">{hint}</p>}
       {/* role="alert" so a screen reader announces the failure on submit. */}
       {error && (
-        <p role="alert" className="text-sm text-amber">
+        <p role="alert" className="text-sm text-red">
           {error}
         </p>
       )}
@@ -107,9 +107,9 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () =>
   const message = error instanceof Error ? error.message : 'Something went wrong.'
 
   return (
-    <div role="alert" className="border border-amber bg-surface p-4 text-ink">
+    <div role="alert" className="border border-red bg-surface p-4 text-ink">
       <p>
-        <span className="text-amber">error: </span>
+        <span className="text-red">error: </span>
         {message}
       </p>
       {onRetry && (

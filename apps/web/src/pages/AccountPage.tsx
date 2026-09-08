@@ -87,7 +87,7 @@ export function AccountPage() {
         </fieldset>
 
         {error && error.fieldErrors.length === 0 && (
-          <p role="alert" className="text-sm text-amber">
+          <p role="alert" className="text-sm text-red">
             {error.message}
           </p>
         )}
