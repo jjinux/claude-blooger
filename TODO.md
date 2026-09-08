@@ -231,6 +231,33 @@ Legend: `[x]` done, `[ ]` not started.
          `allowedAttributes` — the filter runs *after* the transform.
    * [x] Also learned: markdown-it's own `validateLink` already refuses
          `javascript:` and `data:` targets, so those never even become anchors.
+   * [ ] **Investigate DOMPurify as a third layer.** It is the most battle-tested
+         HTML sanitizer there is, maintained by security specialists and hardened
+         against mutation-XSS (mXSS) — the class of bug where a parser re-reads its
+         own serialized output and produces different markup the second time.
+         sanitize-html is a good allowlist filter but makes weaker claims here.
+     * [ ] Decide **where** it goes. Two genuinely different options:
+           server-side as a third pass inside `MarkdownService`, or client-side in
+           the SPA immediately before `dangerouslySetInnerHTML`. The client-side
+           placement is the more valuable one, because it sanitizes at the exact
+           point of injection and so also covers HTML that reaches the browser from
+           anywhere else (a future comments feature, an imported feed, a bug in the
+           API). Doing both is defensible for a genuinely untrusted-input path.
+     * [ ] Weigh the server-side cost honestly. DOMPurify needs a DOM, so on Node it
+           pulls in `jsdom` (v30) via `isomorphic-dompurify` (v4) or a hand-rolled
+           `dompurify` + `jsdom` pairing. That is a heavy dependency and a real
+           per-render cost. If rendered HTML ends up cached rather than recomputed
+           per request, the cost mostly disappears and this gets easier to justify.
+     * [ ] Client-side is much cheaper: `dompurify` (v3) alone in the browser needs
+           no jsdom at all. This is probably the place to start.
+     * [ ] Check whether it actually catches anything the current two layers miss.
+           Run the existing `markdown.service.spec.ts` payloads plus a set of known
+           mXSS vectors through both pipelines and compare. If DOMPurify changes
+           nothing on realistic Markdown-derived HTML, record that finding and skip
+           it rather than adding a dependency for the feeling of safety.
+     * [ ] Whatever is decided, keep sanitization in one place. Three scattered
+           half-configured sanitizers would be worse than the two well-understood
+           ones there are now.
  * [ ] Swagger via `@nestjs/swagger` at `/api/docs`.
  * [x] Bloog listings avoid the obvious N+1: post counts and latest-post timestamps
        for a whole page of users come from one grouped query, not one count per user.
