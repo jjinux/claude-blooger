@@ -305,6 +305,24 @@ so a reused server starts the run part-way through its window.
 - Assert against the API, not just the UI: the admin spec checks that
   `/api/admin/users` answers 403, because hiding the nav link proves nothing.
 
+## Feeds
+
+Feeds are public, identical for everybody, and cached by HTTP rather than by
+anything we run:
+
+- `Cache-Control: public, max-age=300, s-maxage=900, stale-while-revalidate=3600`
+  on every feed route. The ETag is Express's own — it hashes the body and answers
+  `If-None-Match` with a 304 by itself. Do not hand-roll one.
+- **Feed output must be derived from content, never from the clock.** The same
+  posts must serialize to the same bytes, or the ETag changes on every request
+  and the whole scheme is decoration. This is not hypothetical: the `feed`
+  package fills a missing Atom `<updated>` with `new Date()`, which made the
+  empty feed unstable until `FeedsService` started passing the epoch.
+- **Feeds skip the session middleware** (see `isFeedPath` in `bootstrap.ts`), and
+  that is what makes `public` safe. `rolling: true` would otherwise put a
+  `Set-Cookie` on a publicly cacheable response, and a shared cache could hand
+  one reader's session to the next visitor.
+
 ## Workflow
 
 - **Conventional Commits**: `type(scope): subject`. Scopes are `api`, `web`,
