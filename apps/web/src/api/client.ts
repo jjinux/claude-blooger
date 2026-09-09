@@ -1,4 +1,4 @@
-import { CSRF_HEADER } from '@blooger/shared/contracts'
+import { CSRF_HEADER, type ErrorResponse, type FieldError } from '@blooger/shared/contracts'
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS'])
 
@@ -37,11 +37,6 @@ async function fetchCsrfToken(): Promise<void> {
   }
 }
 
-export interface FieldError {
-  field: string
-  message: string
-}
-
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -58,16 +53,16 @@ export class ApiError extends Error {
   }
 }
 
-interface ErrorBody {
-  message?: string | string[]
-  errors?: FieldError[]
-}
-
+/**
+ * The server gives every failure the same body -- see `errorResponseSchema` in
+ * @blooger/shared, which an exception filter enforces. This stays defensive
+ * anyway: a proxy, a gateway, or a network stall can put something else on the
+ * wire, and a login form should say so rather than throw a parse error.
+ */
 function toApiError(status: number, body: unknown): ApiError {
-  const parsed = (body ?? {}) as ErrorBody
-  const message = Array.isArray(parsed.message)
-    ? parsed.message.join(', ')
-    : (parsed.message ?? `Request failed with status ${status}`)
+  const parsed = (body ?? {}) as Partial<ErrorResponse>
+  const message =
+    typeof parsed.message === 'string' ? parsed.message : `Request failed with status ${status}`
 
   return new ApiError(status, message, parsed.errors ?? [])
 }

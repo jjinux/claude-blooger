@@ -44,7 +44,14 @@ describe('api client', () => {
 
   it('turns an error response into an ApiError carrying the status', async () => {
     mockFetch({
-      'POST /api/sessions': { status: 401, body: { message: 'Incorrect username or password' } },
+      'POST /api/sessions': {
+        status: 401,
+        body: {
+          statusCode: 401,
+          error: 'Unauthorized',
+          message: 'Incorrect username or password',
+        },
+      },
     })
 
     await expect(api.post('/api/sessions', {})).rejects.toMatchObject({
@@ -58,6 +65,8 @@ describe('api client', () => {
       'POST /api/users': {
         status: 400,
         body: {
+          statusCode: 400,
+          error: 'Bad Request',
           message: 'Validation failed',
           errors: [{ field: 'password', message: 'too short' }],
         },
