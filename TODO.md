@@ -544,8 +544,26 @@ inline`, so light and dark are one set of names and not two sets of classes.
   - [x] No SWC plugin needed: Vite 8 transforms via Oxc, which supports
         `emitDecoratorMetadata`. Verified by a passing Nest/TypeORM entity test.
   - [x] `vite-tsconfig-paths` is obsolete too -- Vite 8 has `resolve.tsconfigPaths`.
-- [ ] Unit tests with no database: password hashing, Markdown rendering and sanitization,
-      feed XML generation, pagination math.
+- [x] Unit tests with no database: password hashing, Markdown rendering and
+      sanitization, feed XML generation, pagination math.
+  - [x] Password: that the digest carries the OWASP parameters (so raising the
+        cost cannot pass unnoticed), that it salts, and -- the one that matters --
+        that `verifyPassword` returns false rather than throwing on a malformed
+        digest. Login compares an unknown username against a dummy hash to even
+        out the timing; if a bad digest threw, that path would 500 and the
+        endpoint would be the username oracle the dummy hash exists to prevent.
+  - [x] Feeds: the services are stubbed, so this can ask what the integration
+        specs cannot set up cheaply -- an empty feed, and a trailing slash on
+        `APP_URL`. Byte stability is asserted directly here as well as through
+        the ETag.
+  - [x] Pagination: the boundaries. No page invented when the count divides
+        exactly, one empty page rather than zero when there is nothing, and the
+        query schema coercing the strings a query string actually delivers.
+  - [x] `buildPage` lives in `packages/shared`, which has no suite of its own --
+        it is types, schemas, and this one piece of arithmetic. The tests sit in
+        `apps/api`, the only workspace that calls them at runtime and the only one
+        CI already runs. Give the shared package its own suite when it grows a
+        second thing worth testing.
 - [x] Integration tests against a real MySQL `blooger_test`.
   - [x] Migrated once per run by a Vitest `globalSetup`.
   - [x] **Correction to the original plan.** Transaction-per-test cannot work for
