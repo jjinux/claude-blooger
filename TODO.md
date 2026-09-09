@@ -749,10 +749,10 @@ inline`, so light and dark are one set of names and not two sets of classes.
 Not being built. Listed so they don't get silently forgotten, and so nobody
 mistakes their absence for an oversight.
 
-- [ ] Comments on posts.
-- [ ] Tags (many-to-many — the one relation shape this schema won't teach).
-- [ ] Post drafts and URL slugs.
-- [ ] Full-text search.
-- [ ] Image uploads.
-- [ ] Server-side rendering, if SEO ever matters.
-- [ ] Deployment (the Rails version ran on Heroku).
+- Comments on posts.
+- Tags (many-to-many — the one relation shape this schema won't teach).
+- Post drafts and URL slugs.
+- Full-text search.
+- Image uploads.
+- Server-side rendering, if SEO ever matters.
+- Deployment (the Rails version ran on Heroku).
