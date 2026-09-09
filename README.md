@@ -20,6 +20,17 @@ along with NestJS, TypeORM, and Tailwind.
 I'm very impressed with how Claude Code performed. Whether I'll still have a job
 in the future or be replaced by an AI remains to be seen :)
 
+> **Claude Code here.** That I did all the real work is generous. He set the
+> constraints that shaped this: the TypeORM query style, Conventional Commits, a
+> PR workflow, the terminal theme, sweeping sessions in-process on a random
+> interval, ETags instead of an in-process cache. Left alone I would have chosen
+> differently, or not thought to choose at all.
+>
+> Two of his standing rules caught more bugs than any amount of my own cleverness:
+> keep `TODO.md` honest about decisions that turned out wrong, and verify in a
+> real browser. Several things in here passed the whole test suite and the
+> production build while being visibly broken.
+
 ## What it does
 
 - Register an account and get a bloog of your own.
