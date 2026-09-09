@@ -353,16 +353,17 @@ Legend: `[x]` done, `[ ]` not started.
           parser is the judge -- which is the only thing that can actually rule
           on a mutation, since a string comparison by definition cannot see one.
           If `html: true` is ever set, those fail rather than production.
-    - [x] What would reopen this, specifically:
-      - [ ] Turning `html: true` on, for embeds or anything else. That deletes
-            the entire argument above in one line.
-      - [ ] A second source of HTML reaching the SPA -- comments, an imported
-            feed, anything not produced by `MarkdownService`. Then client-side
-            DOMPurify at the point of injection in `PostBody` covers a surface
-            the server-side sanitizer never sees, and 10.7 kB is cheap for it.
-      - [ ] Caching rendered HTML. The 4x render cost is the main objection to
-            the server-side placement, and it mostly disappears if the output is
-            computed once rather than per request.
+    - [x] Closed. What would reopen it, specifically -- conditions to notice, not
+          work to schedule:
+      - Turning `html: true` on, for embeds or anything else. That deletes the
+        entire argument above in one line.
+      - A second source of HTML reaching the SPA -- comments, an imported feed,
+        anything not produced by `MarkdownService`. Then client-side DOMPurify at
+        the point of injection in `PostBody` covers a surface the server-side
+        sanitizer never sees, and 10.7 kB is cheap for it.
+      - Caching rendered HTML. The 4x render cost is the main objection to the
+        server-side placement, and it mostly disappears if the output is computed
+        once rather than per request.
 - [x] Swagger via `@nestjs/swagger` at `/api/docs`, raw document at
       `/api/docs-json`. 23 operations, 13 named response models.
   - [x] **No DTO classes and no `@ApiProperty()`.** @nestjs/swagger 12 reads
@@ -627,8 +628,6 @@ inline`, so light and dark are one set of names and not two sets of classes.
       One worker, no truncation between specs, so registrations use
       `uniqueUsername()`; a fixed name passes on a fresh database and fails with
       "already taken" on the second run.
-- [ ] Test factories for users and posts (the `factory_girl` equivalent). The
-      seed plus `uniqueUsername()` has been enough so far.
 - [ ] CI-ready: one command that boots MySQL, migrates, and runs everything.
       `npm run test:e2e` is that command for the browser flows; `npm test` still
       expects MySQL to be up already.
@@ -702,7 +701,7 @@ inline`, so light and dark are one set of names and not two sets of classes.
   - [x] Every factual claim in it was checked against the code rather than written
         from memory — file paths, exported names, guard registration, and config
         values all verified.
-- [ ] Keep this TODO.md updated as things land.
+- [x] Keep this TODO.md updated as things land.
 
 ## 11. Continuous integration
 
