@@ -744,9 +744,10 @@ inline`, so light and dark are one set of names and not two sets of classes.
       log and would hang the job forever. The step calls `docker compose logs`
       with `--tail` directly.
 
-## 12. Deferred
+## 12. Out of scope
 
-Explicitly out of scope for v1; listed so they don't get silently forgotten.
+Not being built. Listed so they don't get silently forgotten, and so nobody
+mistakes their absence for an oversight.
 
 - [ ] Comments on posts.
 - [ ] Tags (many-to-many — the one relation shape this schema won't teach).
