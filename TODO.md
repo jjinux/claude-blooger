@@ -195,17 +195,36 @@ Legend: `[x]` done, `[ ]` not started.
   - [x] Note: don't use `connect-typeorm` — last published 2022, and its peer dep is
         `typeorm ^0.3.0`, so it won't accept 1.x.
   - [x] Cookie: `httpOnly`, `sameSite: 'lax'`, `secure` in production, rolling expiry.
-  - [ ] **`pruneExpired()` is written but never called.** The store has a working
-        sweep and nothing invokes it, so expired session rows accumulate in MySQL
-        forever. Not a security hole — expiry is enforced on every read, and a stale
-        row can never authenticate a request — but the table grows without bound,
-        and every logged-out visitor who ever loaded a page leaves one behind.
-    - [ ] Decide where the sweep lives. A `setInterval` in a lifecycle hook is the
-          obvious answer and the wrong one for more than a single instance: every
-          replica would sweep concurrently. An external scheduler, or a lock, or
-          simply accepting the duplicate DELETEs since they are idempotent.
-    - [ ] Whatever runs it, it needs a test. The current `pruneExpired()` has none,
-          which is part of how it came to be dead code in the first place.
+  - [x] **`pruneExpired()` is written but never called.** Fixed: `SessionSweeper`
+        calls it. Never a security hole — expiry is enforced on every read, and a
+        stale row could never authenticate a request — but the table grew without
+        bound, and every logged-out visitor who ever loaded a page left one behind.
+    - [x] Decided: in-process, on a timer, with **no lock**. The delay is
+          re-randomised before _every_ sweep, 20 to 60 minutes, which is the part
+          that makes it survive more than one instance — a plain `setInterval`
+          would put a fleet restarted together into permanent lockstep, whereas
+          jitter spreads them out and keeps them spread.
+    - [x] No lock and no external scheduler, on purpose.
+          `DELETE ... WHERE expires_at < NOW()` is idempotent: a second replica
+          running it a moment later deletes what the first missed, or nothing.
+          Duplicated work on a table this size is cheaper than coordinating to
+          avoid it, and unlike a cron job it needs nothing deployed alongside.
+    - [x] The timer is **unref'd**. Housekeeping must never be the reason the
+          process stays alive, and a referenced timer would hold the test suite
+          open for up to an hour.
+    - [x] A failed sweep is logged and the next one is scheduled anyway. There is
+          no state to lose, and the following sweep is under an hour away.
+    - [x] The store moved from a `new` in `bootstrap.ts` to a provider, so the
+          sweeper gets the same instance and Nest's lifecycle starts and stops it.
+          `@Optional()` on the injected random function, or Nest tries to resolve
+          `Function` from the container and refuses to boot.
+    - [x] Tested, which the sweep never was — that is a fair part of how it came
+          to be dead code. Six unit specs on the schedule (including that the
+          delay really is redrawn each time, which a `setInterval` would fail) and
+          three against a real database on `pruneExpired` itself.
+      - [x] The unref assertion was vacuous when first written — it only checked
+            that `setTimeout` returned something. Rewritten to spy on the timer,
+            and confirmed by deleting the `unref()` call and watching it fail.
 - [x] `AuthGuard` (is anyone logged in?) and `AdminGuard` (is it the admin?), plus a
       `@CurrentUser()` param decorator.
 - [x] Ownership checks: you may only edit or delete your own posts; an admin may touch

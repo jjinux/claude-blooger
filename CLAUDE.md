@@ -141,6 +141,13 @@ The SPA renders the server's `bodyHtml`. It never parses Markdown.
 - Guards **re-read the user from the database** every request rather than
   trusting the session payload, so a deleted or demoted account loses access at
   once.
+- `SessionSweeper` deletes expired session rows on a **delay re-randomised before
+  every sweep**, 20 to 60 minutes. Not a `setInterval`: a fleet restarted
+  together would sweep in lockstep forever. There is no lock, deliberately —
+  `DELETE WHERE expires_at < NOW()` is idempotent, so a second replica deletes
+  whatever the first missed or nothing at all, which is cheaper than coordinating.
+  Its timer is **unref'd**; housekeeping must never keep the process (or a test
+  run) alive.
 - Guard order matters: `@UseGuards(AuthenticatedGuard, AdminGuard)`.
   `AuthenticatedGuard` is what populates `request.user`.
 - `CsrfGuard` and `RateLimitGuard` are registered **globally** in `AppModule`.
