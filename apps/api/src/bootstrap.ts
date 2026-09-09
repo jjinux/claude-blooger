@@ -2,9 +2,7 @@ import { extname, join, resolve } from 'node:path'
 import type { NestExpressApplication } from '@nestjs/platform-express'
 import type { NextFunction, Request, Response } from 'express'
 import session from 'express-session'
-import { DataSource } from 'typeorm'
 import { SESSION_COOKIE_NAME, SESSION_TTL_MS } from './auth/session.constants.js'
-import { SessionEntity } from './auth/session.entity.js'
 import { ApiExceptionFilter } from './common/api-exception.filter.js'
 import { REPO_ROOT } from './config/paths.js'
 import { setupSwagger } from './docs/openapi.js'
@@ -32,8 +30,9 @@ export function configureApp(app: NestExpressApplication, env: Env): void {
   // First, so that everything below it fails in one documented shape.
   app.useGlobalFilters(new ApiExceptionFilter())
 
-  const dataSource = app.get(DataSource)
-  const store = new TypeOrmSessionStore(dataSource.getRepository(SessionEntity))
+  // From the container, not `new`: SessionSweeper is handed the same instance,
+  // and Nest starts and stops it with the application.
+  const store = app.get(TypeOrmSessionStore)
 
   app.use(
     session({
