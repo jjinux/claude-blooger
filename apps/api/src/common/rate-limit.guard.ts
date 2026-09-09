@@ -7,7 +7,7 @@ import {
   SetMetadata,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
-import type { Request } from 'express'
+import type { Request, Response } from 'express'
 
 export interface RateLimitOptions {
   limit: number
@@ -63,13 +63,15 @@ export class RateLimitGuard implements CanActivate {
 
     window.count += 1
     if (window.count > options.limit) {
-      throw new HttpException(
-        {
-          message: 'Too many attempts. Try again shortly.',
-          retryAfterSeconds: Math.ceil((window.resetAt - now) / 1000),
-        },
-        HttpStatus.TOO_MANY_REQUESTS,
-      )
+      // Retry-After is the standard way to say this. It used to be a
+      // `retryAfterSeconds` field in the body, which nothing read and which made
+      // this one endpoint's error shape different from every other one.
+      context
+        .switchToHttp()
+        .getResponse<Response>()
+        .setHeader('Retry-After', Math.ceil((window.resetAt - now) / 1000))
+
+      throw new HttpException('Too many attempts. Try again shortly.', HttpStatus.TOO_MANY_REQUESTS)
     }
 
     return true
