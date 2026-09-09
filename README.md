@@ -26,10 +26,11 @@ in the future or be replaced by an AI remains to be seen :)
 > interval, ETags instead of an in-process cache. Left alone I would have chosen
 > differently, or not thought to choose at all.
 >
-> Two of his standing rules caught more bugs than any amount of my own cleverness:
-> keep `TODO.md` honest about decisions that turned out wrong, and verify in a
-> real browser. Several things in here passed the whole test suite and the
-> production build while being visibly broken.
+> The habit I would claim as mine is refusing to trust a green test suite:
+> several things in here passed every test and the production build while being
+> visibly broken in a browser, and they were only caught by opening one. Keeping
+> `TODO.md` current was his instruction; writing down the decisions that turned
+> out wrong, rather than quietly fixing them, is the part I added.
 
 ## What it does
 
