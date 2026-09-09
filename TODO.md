@@ -228,12 +228,48 @@ Legend: `[x]` done, `[ ]` not started.
 
 ## 6. API
 
-- [x] Validation via a small `ZodValidationPipe` against the schemas in
+- [x] Validation via a small `SchemaValidationPipe` against the schemas in
       `packages/shared`, rather than `class-validator`. Zod strips unknown keys from
       object schemas by default, which gives the same protection `whitelist: true`
       would -- covered by a test that a smuggled `isAdmin` field cannot reach the entity.
       This keeps one schema shared by the API and the SPA instead of two definitions.
-- [ ] Consistent error shape via an exception filter.
+  - [x] **Rewritten when the OpenAPI work landed.** It used to be constructed per
+        route -- `@Body(new ZodValidationPipe(loginSchema))`. It is now registered
+        once, globally, and reads the schema from `ArgumentMetadata.schema`, which
+        Nest 12 carries there from `@Body({ schema: loginSchema })`. One
+        declaration validates _and_ documents the endpoint; the alternative was
+        naming the schema twice per route and letting the two drift.
+  - [x] It speaks Standard Schema rather than zod, which is why it is no longer
+        called `ZodValidationPipe`. The schemas are still zod.
+- [x] Response schemas in `packages/shared/src/responses.ts`, with the wire types
+      in `types.ts` inferred from them, so the types, the generated documentation,
+      and the conformance test all come from one declaration.
+  - [x] The trick that makes this free for the browser: `types.ts` imports the
+        schemas with `import type`, so the emitted `types.js` is literally
+        `export {}` and `contracts.ts` stays zod-free. Verified -- the bundle went
+        from 291 kB to 289.77 kB, and there is no zod in it.
+  - [x] `Page<T>` stays a hand-written generic interface. `pageSchema()` is a
+        function, so there is no single schema to infer a generic from.
+  - [x] Nothing validates responses on the way out. `test/response-shapes.spec.ts`
+        parses real responses through the schemas and compares the parsed value
+        against the original, which catches an unexpected field as well as a
+        missing one, and keeps the cost off the request path.
+- [x] Consistent error shape via an exception filter. `ApiExceptionFilter` gives
+      every failure `{ statusCode, error, message }`, plus `errors` when the
+      failure was per-field validation. The shape is `errorResponseSchema` in
+      @blooger/shared, so the SPA types against it and /api/docs publishes it.
+  - [x] It was worth doing because the shape genuinely varied: a string argument
+        to an exception yields `{ statusCode, error, message }`, an object
+        argument replaces that wholesale -- so validation failures, the most
+        common error in the app, were arriving with no `statusCode` at all.
+  - [x] Anything that is not an `HttpException` is logged with its stack and
+        reported as a bare "Internal server error". An exception message can
+        carry a query, a path, or a name that is nobody's business.
+  - [x] The reason phrase comes from `HttpStatus[status]`, not a hand-kept table
+        that would be missing whichever status someone adds next.
+  - [x] The rate limiter's `retryAfterSeconds` body field is gone; it sets a
+        `Retry-After` header instead. Nothing read the field, and it made one
+        endpoint's errors a different shape from every other endpoint's.
 - [ ] Endpoints:
   - [x] `POST /api/users` (register), `GET/PATCH /api/account`.
   - [x] `POST /api/sessions` (login), `DELETE /api/sessions` (logout), `GET /api/me`.
@@ -281,7 +317,38 @@ Legend: `[x]` done, `[ ]` not started.
     - [ ] Whatever is decided, keep sanitization in one place. Three scattered
           half-configured sanitizers would be worse than the two well-understood
           ones there are now.
-- [ ] Swagger via `@nestjs/swagger` at `/api/docs`.
+- [x] Swagger via `@nestjs/swagger` at `/api/docs`, raw document at
+      `/api/docs-json`. 23 operations, 13 named response models.
+  - [x] **No DTO classes and no `@ApiProperty()`.** @nestjs/swagger 12 reads
+        Standard Schema, and zod 4 implements it, so the zod schemas already in
+        `packages/shared` are the input. This is the thing that made the whole
+        item cheap; the usual advice for zod-based Nest projects (`nestjs-zod`,
+        hand-written `@ApiBody({ schema })`) is out of date.
+  - [x] Request bodies and query strings need no decorator at all: Nest 12 carries
+        the schema from `@Body({ schema })` through to the generator. Only
+        responses need `@ApiOkResponse({ standardSchema: ... })`.
+  - [x] Response schemas got named components via a `standardSchemaConverter`
+        backed by a zod registry, so `PostSummaryPage.items` refers to
+        `PostSummary` instead of inlining it for the sixth time. 27 kB of JSON
+        rather than a document where every model is spelled out at each use.
+    - [x] Query schemas must _not_ be named. The generator decomposes their
+          properties into individual query parameters and cannot do that through
+          a `$ref`, so the converter only rewrites `output` schemas -- which is
+          what `schemaType` is for.
+  - [x] Two bugs the tests caught, both invisible by eye:
+    - [x] `addCookieAuth`'s first argument names the _cookie_; the third names the
+          _scheme_. Without the third, every protected route required a scheme
+          called `blooger.sid` while the only declared one was called `cookie`,
+          and Swagger UI's Authorize button did nothing. There is now a test that
+          every security requirement and every `$ref` resolves.
+    - [x] `@ApiProduces(ATOM)` on the feed routes applied to _all_ their
+          responses, so the document claimed a 404 would arrive as
+          `application/atom+xml`. Content type belongs on the success response.
+  - [x] Boring but real: `docs/openapi.ts` naming the session cookie meant
+        importing a constant from `bootstrap.ts`, which imports the docs setup --
+        an ESM cycle, and the description is a top-level template literal, so it
+        blew up with "Cannot access 'SESSION_COOKIE_NAME' before initialization"
+        at boot. The constants moved to `auth/session.constants.ts`.
 - [x] Bloog listings avoid the obvious N+1: post counts and latest-post timestamps
       for a whole page of users come from one grouped query, not one count per user.
 

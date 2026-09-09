@@ -152,10 +152,60 @@ The SPA renders the server's `bodyHtml`. It never parses Markdown.
 
 ### Validation
 
-Zod schemas in `packages/shared`, applied with `ZodValidationPipe`. Not
-class-validator — one schema, shared by the API and the SPA's forms. Zod strips
-unknown keys, which is what stops a client smuggling `isAdmin: true` into a
-request body.
+Zod schemas in `packages/shared`, not class-validator — one schema, shared by the
+API and the SPA's forms. Zod strips unknown keys, which is what stops a client
+smuggling `isAdmin: true` into a request body.
+
+**Declare the schema on the parameter**, not in a pipe:
+
+```ts
+@Post('sessions')
+login(@Body({ schema: loginSchema }) input: LoginInput) {}
+```
+
+`SchemaValidationPipe` is registered once, globally, and reads
+`ArgumentMetadata.schema` — Nest 12 carries a Standard Schema there from the
+parameter decorator. One declaration therefore does two jobs: it validates, and
+`@nestjs/swagger` reads the same object to document the endpoint. Documenting a
+body separately from validating it is how the two end up disagreeing. Parameters
+with no schema pass straight through, so `@Param('id', ParseIntPipe)` is
+unaffected.
+
+### Errors
+
+**Every failure has one shape**, `errorResponseSchema` in `@blooger/shared`:
+`{ statusCode, error, message }`, plus `errors: [{ field, message }]` when the
+failure was per-field validation. `ApiExceptionFilter` enforces it, so throw
+whatever Nest exception fits and do not hand-roll a body.
+
+Left alone, the shape depends on how the exception was built: a string argument
+yields `{ statusCode, error, message }`, while an object argument replaces that
+wholesale and loses `statusCode`. Anything that is not an `HttpException` is a
+bug — it is logged with its stack and the client is told only "Internal server
+error", because an exception message can carry a query or a path.
+
+Extra fields do not belong in an error body. The rate limiter used to return
+`retryAfterSeconds`; it sets a `Retry-After` header instead.
+
+### API documentation
+
+OpenAPI at `/api/docs`, JSON at `/api/docs-json`, generated in
+`src/docs/openapi.ts`. There are no DTO classes and no `@ApiProperty()`: the zod
+schemas are Standard Schemas and @nestjs/swagger reads them directly.
+
+- Request bodies and query strings need no decorator at all — they come from
+  `@Body({ schema })` and `@Query({ schema })`.
+- Responses need one: `@ApiOkResponse({ standardSchema: postDetailSchema })`.
+- Failures are `@ApiErrors(400, 401, 404)` from `src/docs/decorators.ts`, which
+  attaches `ErrorResponse` and the one agreed description per status.
+- Response schemas listed in `NAMED_SCHEMAS` become named components that
+  cross-reference each other. Query schemas must **not** be named: the generator
+  decomposes their properties into individual query parameters, which it cannot
+  do through a `$ref`. That is why the converter only rewrites `output` schemas.
+- `addCookieAuth(cookieName, options, schemeName)` — the first argument names the
+  cookie and the third names the scheme. Confusing them produces routes that
+  require a scheme nobody declared, and Swagger UI's Authorize button then does
+  nothing. There is a test for dangling security requirements and `$ref`s.
 
 ## The shared package
 
@@ -179,6 +229,12 @@ npm run test:api        # needs MySQL up
 npm run test:web        # jsdom only, needs nothing
 npm run test:e2e        # Playwright; needs MySQL and `npx playwright install chromium`
 ```
+
+Response schemas are documentation, and documentation nothing checks drifts.
+`test/response-shapes.spec.ts` parses real responses through them and compares
+the parsed value against the original — `parse` strips unknown keys, so that
+catches a field the schema does not know about as well as one the API forgot to
+send. Nothing validates responses on the way out; that cost belongs in a test.
 
 The API suite migrates `blooger_test` once per run via Vitest `globalSetup` and
 never touches `blooger_dev`.

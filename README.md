@@ -178,6 +178,16 @@ Node comes from `.nvmrc`, so CI cannot drift away from your machine.
 Everything CI runs, you can run yourself with the commands above — there is no
 step that only exists in the workflow.
 
+## The API
+
+Interactive documentation is at **http://localhost:3000/api/docs** once the API
+is running, with the raw OpenAPI 3.0 document at `/api/docs-json`.
+
+It is generated from the same zod schemas that validate the requests, so it
+cannot describe a body the server would reject. Every failure shares one shape
+(`ErrorResponse`), and the description at the top explains the session cookie and
+the CSRF header the SPA sends.
+
 ## Database
 
 ```sh
