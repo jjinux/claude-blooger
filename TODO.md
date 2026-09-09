@@ -309,33 +309,60 @@ Legend: `[x]` done, `[ ]` not started.
         `allowedAttributes` — the filter runs _after_ the transform.
   - [x] Also learned: markdown-it's own `validateLink` already refuses
         `javascript:` and `data:` targets, so those never even become anchors.
-  - [ ] **Investigate DOMPurify as a third layer.** It is the most battle-tested
-        HTML sanitizer there is, maintained by security specialists and hardened
-        against mutation-XSS (mXSS) — the class of bug where a parser re-reads its
-        own serialized output and produces different markup the second time.
-        sanitize-html is a good allowlist filter but makes weaker claims here.
-    - [ ] Decide **where** it goes. Two genuinely different options:
-          server-side as a third pass inside `MarkdownService`, or client-side in
-          the SPA immediately before `dangerouslySetInnerHTML`. The client-side
-          placement is the more valuable one, because it sanitizes at the exact
-          point of injection and so also covers HTML that reaches the browser from
-          anywhere else (a future comments feature, an imported feed, a bug in the
-          API). Doing both is defensible for a genuinely untrusted-input path.
-    - [ ] Weigh the server-side cost honestly. DOMPurify needs a DOM, so on Node it
-          pulls in `jsdom` (v30) via `isomorphic-dompurify` (v4) or a hand-rolled
-          `dompurify` + `jsdom` pairing. That is a heavy dependency and a real
-          per-render cost. If rendered HTML ends up cached rather than recomputed
-          per request, the cost mostly disappears and this gets easier to justify.
-    - [ ] Client-side is much cheaper: `dompurify` (v3) alone in the browser needs
-          no jsdom at all. This is probably the place to start.
-    - [ ] Check whether it actually catches anything the current two layers miss.
-          Run the existing `markdown.service.spec.ts` payloads plus a set of known
-          mXSS vectors through both pipelines and compare. If DOMPurify changes
-          nothing on realistic Markdown-derived HTML, record that finding and skip
-          it rather than adding a dependency for the feeling of safety.
-    - [ ] Whatever is decided, keep sanitization in one place. Three scattered
-          half-configured sanitizers would be worse than the two well-understood
-          ones there are now.
+  - [x] **Investigated DOMPurify as a third layer. Decision: no.** It is the most
+        battle-tested HTML sanitizer there is, hardened against mutation-XSS
+        (mXSS) -- the class of bug where a parser re-reads its own serialized
+        output and produces different markup the second time. sanitize-html makes
+        weaker claims there. It still does not earn a place here, and the
+        measurements are below so the decision can be revisited on evidence
+        rather than re-argued.
+    - [x] **It would change nothing.** 20 payloads through the real pipeline --
+          the existing spec's plus seven classic mXSS vectors: 0 produced
+          anything dangerous, and 0 changed at all when serialized, re-parsed and
+          re-serialized. There is no mutation to defend against.
+    - [x] **The reason is `html: false`, not the allowlist.** Every mXSS vector
+          depends on an element whose content is parsed in a foreign context --
+          `noscript`, `style`, `svg`, `math`, `template`, `xmp`. markdown-it
+          escapes them in the source, so what reaches sanitize-html is already
+          text and there is nothing for a second parse to reinterpret. The
+          conclusion holds only while `html` stays false.
+    - [x] **It would actively regress the app.** DOMPurify changed 4 of the 20
+          outputs, and every change was the same one: it strips `target="_blank"`
+          by default. `MarkdownService` deliberately adds it alongside
+          `rel="nofollow noopener noreferrer"`, and there is a test asserting
+          exactly that -- so a naive third pass fails the suite on day one.
+          Fixable with `ADD_ATTR: ['target']`, but a sanitizer that has to be
+          talked out of its own defaults is not the free win it looks like.
+    - [x] **Library against library, my corpus cannot separate them.** Fed raw
+          HTML with `html: true` and a deliberately generous allowlist -- the
+          scenario where the sanitizer is the only defence -- sanitize-html
+          leaked 0 of 19 and DOMPurify leaked 0 of 19. Said plainly: these are
+          known, long-patched vectors, so this shows my test set is not
+          discriminating, not that the two libraries are equally robust.
+          DOMPurify's real advantage is the attention it gets from researchers,
+          which no 20-payload harness can measure.
+    - [x] Cost, client-side: 28.7 kB minified, 10.7 kB gzipped, against a bundle
+          that is 89.74 kB gzipped today. A 12% increase.
+    - [x] Cost, server-side: DOMPurify needs a DOM, so Node pulls in jsdom -- 8.3
+          MB on disk for jsdom alone. The extra pass measured 0.201 ms against
+          0.062 ms for the entire current render, so it would more than quadruple
+          the cost of rendering a post.
+    - [x] **Instead of the dependency, the evidence became tests.** The mXSS
+          corpus is now seven cases in `markdown.service.spec.ts`, and three of
+          the vectors went into the Playwright XSS spec, where a real browser's
+          parser is the judge -- which is the only thing that can actually rule
+          on a mutation, since a string comparison by definition cannot see one.
+          If `html: true` is ever set, those fail rather than production.
+    - [x] What would reopen this, specifically:
+      - [ ] Turning `html: true` on, for embeds or anything else. That deletes
+            the entire argument above in one line.
+      - [ ] A second source of HTML reaching the SPA -- comments, an imported
+            feed, anything not produced by `MarkdownService`. Then client-side
+            DOMPurify at the point of injection in `PostBody` covers a surface
+            the server-side sanitizer never sees, and 10.7 kB is cheap for it.
+      - [ ] Caching rendered HTML. The 4x render cost is the main objection to
+            the server-side placement, and it mostly disappears if the output is
+            computed once rather than per request.
 - [x] Swagger via `@nestjs/swagger` at `/api/docs`, raw document at
       `/api/docs-json`. 23 operations, 13 named response models.
   - [x] **No DTO classes and no `@ApiProperty()`.** @nestjs/swagger 12 reads
