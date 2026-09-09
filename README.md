@@ -8,6 +8,18 @@ A small multi-user blogging engine. Everyone who registers gets their own
 It is a TypeScript port of a Rails app of the same name, rebuilt as a way to
 practise NestJS, TypeORM, React, and Tailwind on a current stack.
 
+## Motivation
+
+Whenever I learn a new web technology, I like to code the same project: either a
+bulletin board or a blog. I always include authentication, because that's a giant
+hurdle to have to code, and getting it right tells you a lot about a stack.
+
+This time my goal was to practise Claude Code — which did all the real work —
+along with NestJS, TypeORM, and Tailwind.
+
+I'm very impressed with how Claude Code performed. Whether I'll still have a job
+in the future or be replaced by an AI remains to be seen :)
+
 ## What it does
 
 - Register an account and get a bloog of your own.
