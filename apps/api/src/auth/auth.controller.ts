@@ -3,12 +3,20 @@ import {
   loginSchema,
   type RegisterInput,
   registerSchema,
+  sessionResponseSchema,
   type SessionResponse,
 } from '@blooger/shared'
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Post, Req } from '@nestjs/common'
+import {
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger'
 import type { Request } from 'express'
 import { RateLimit } from '../common/rate-limit.guard.js'
-import { ZodValidationPipe } from '../common/zod-validation.pipe.js'
+import { ApiErrors } from '../docs/decorators.js'
 import { toPublicUser, UsersService } from '../users/users.service.js'
 import { AuthService } from './auth.service.js'
 import {
@@ -22,6 +30,7 @@ import {
 // RateLimitGuard is registered globally in AppModule, so listing it in
 // @UseGuards here as well would run it twice per request -- double-counting every
 // attempt against the limit.
+@ApiTags('auth')
 @Controller()
 export class AuthController {
   constructor(
@@ -34,6 +43,13 @@ export class AuthController {
    * every later mutating request has to echo back.
    */
   @Get('me')
+  @ApiOperation({
+    summary: 'Who am I, and what CSRF token should I send?',
+    description:
+      'Answers 200 whether or not anyone is logged in -- `user` is null when nobody is. ' +
+      'Always issues a CSRF token, so an anonymous client can call this before registering.',
+  })
+  @ApiOkResponse({ standardSchema: sessionResponseSchema })
   async me(@Req() request: Request): Promise<SessionResponse> {
     const csrfToken = ensureCsrfToken(request)
     const userId = request.session.userId
@@ -47,8 +63,14 @@ export class AuthController {
   @Post('users')
   @HttpCode(HttpStatus.CREATED)
   @RateLimit({ limit: 5, windowMs: 60_000 })
+  @ApiOperation({
+    summary: 'Register, and get a bloog',
+    description: 'Logs the new account in, so the response is a session.',
+  })
+  @ApiCreatedResponse({ standardSchema: sessionResponseSchema })
+  @ApiErrors(400, 403, 409, 429)
   async register(
-    @Body(new ZodValidationPipe(registerSchema)) input: RegisterInput,
+    @Body({ schema: registerSchema }) input: RegisterInput,
     @Req() request: Request,
   ): Promise<SessionResponse> {
     const user = await this.auth.register(input)
@@ -58,8 +80,16 @@ export class AuthController {
   @Post('sessions')
   @HttpCode(HttpStatus.OK)
   @RateLimit({ limit: 10, windowMs: 60_000 })
+  @ApiOperation({
+    summary: 'Log in',
+    description:
+      'A wrong username and a wrong password fail identically, on purpose: telling ' +
+      'them apart would make this endpoint a way to enumerate accounts.',
+  })
+  @ApiOkResponse({ standardSchema: sessionResponseSchema })
+  @ApiErrors(400, 401, 403, 429)
   async login(
-    @Body(new ZodValidationPipe(loginSchema)) input: LoginInput,
+    @Body({ schema: loginSchema }) input: LoginInput,
     @Req() request: Request,
   ): Promise<SessionResponse> {
     const user = await this.auth.verifyCredentials(input)
@@ -68,6 +98,9 @@ export class AuthController {
 
   @Delete('sessions')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Log out' })
+  @ApiNoContentResponse({ description: 'Session destroyed.' })
+  @ApiErrors(403)
   async logout(@Req() request: Request): Promise<void> {
     await destroySession(request)
   }
