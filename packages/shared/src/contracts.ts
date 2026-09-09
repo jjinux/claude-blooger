@@ -19,5 +19,6 @@ export * from './types.js'
  * the SPA's forms and the API's validation from drifting apart.
  */
 export type { LoginInput, RegisterInput, UpdateAccountInput } from './auth.js'
+export type { ErrorResponse, FieldError } from './errors.js'
 export type { PaginationQuery } from './pagination.js'
 export type { CreatePostInput, UpdatePostInput } from './posts.js'
