@@ -78,6 +78,87 @@ describe('feeds', () => {
     })
   })
 
+  describe('caching', () => {
+    const FEEDS = ['/feed.atom', '/feed.rss', '/feed.json', '/bloogs/joe/feed.atom']
+
+    it.each(FEEDS)('marks %s publicly cacheable', async (path) => {
+      const response = await ctx.agent.get(path).expect(200)
+      const cacheControl = response.headers['cache-control']
+
+      expect(cacheControl).toContain('public')
+      expect(cacheControl).toContain('max-age=300')
+      expect(cacheControl).toContain('s-maxage=900')
+      expect(cacheControl).toContain('stale-while-revalidate=3600')
+    })
+
+    it.each(FEEDS)('answers a conditional request for %s with 304 and no body', async (path) => {
+      const first = await ctx.agent.get(path).expect(200)
+      const etag = first.headers.etag as string
+
+      expect(etag).toBeTruthy()
+
+      const second = await ctx.agent.get(path).set('If-None-Match', etag).expect(304)
+      expect(second.text).toBeFalsy()
+      // A 304 has to carry the validator, or the cache cannot refresh its entry.
+      expect(second.headers.etag).toBe(etag)
+    })
+
+    /**
+     * Found by the 304 test above, which is the only reason it was noticed.
+     *
+     * Atom requires a feed-level `<updated>`, and the `feed` package fills in
+     * `new Date()` when given none -- at millisecond resolution. An empty Atom
+     * feed was therefore different on every request, so its ETag never matched
+     * and a reader polling an empty bloog re-downloaded it forever. RSS and JSON
+     * Feed do not show the field, which is how it stayed hidden.
+     */
+    it.each(['/feed.atom', '/feed.rss', '/feed.json'])(
+      'serializes %s identically when nothing has changed, even with no posts',
+      async (path) => {
+        const first = await ctx.agent.get(path).expect(200)
+        const second = await ctx.agent.get(path).expect(200)
+
+        expect(second.text).toBe(first.text)
+        expect(second.headers.etag).toBe(first.headers.etag)
+      },
+    )
+
+    it('changes the ETag when a post is published', async () => {
+      const before = (await ctx.agent.get('/feed.atom').expect(200)).headers.etag as string
+      await addPost('Something new').expect(201)
+      const after = (await ctx.agent.get('/feed.atom').expect(200)).headers.etag as string
+
+      expect(after).not.toBe(before)
+      // And the old validator no longer matches, so a cache refetches.
+      await ctx.agent.get('/feed.atom').set('If-None-Match', before).expect(200)
+    })
+
+    /**
+     * The reason feeds skip the session middleware.
+     *
+     * `rolling: true` re-sends an existing session's cookie on every request it
+     * touches. On a response marked `Cache-Control: public`, a shared cache that
+     * stored that would hand one reader's session to the next visitor. Most CDNs
+     * decline to cache a response carrying Set-Cookie, but that is a convention,
+     * not a boundary -- so the cookie must not be there in the first place.
+     */
+    it('never sets a cookie, even for a reader who is logged in', async () => {
+      // `ctx.agent` has been logged in by registerUser, and proves it here.
+      const account = await ctx.agent.get('/api/account').expect(200)
+      expect(account.headers['set-cookie']).toBeDefined()
+
+      for (const path of FEEDS) {
+        const response = await ctx.agent.get(path).expect(200)
+        expect(response.headers['set-cookie'], path).toBeUndefined()
+      }
+    })
+
+    it('leaves the JSON API uncached', async () => {
+      const response = await ctx.agent.get('/api/posts').expect(200)
+      expect(response.headers['cache-control']).toBeUndefined()
+    })
+  })
+
   describe('content types', () => {
     it.each([
       ['/feed.atom', 'application/atom+xml'],
