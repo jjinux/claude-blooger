@@ -535,8 +535,20 @@ inline`, so light and dark are one set of names and not two sets of classes.
       server failed with "does not provide an export named 'CSRF_HEADER'" and the
       page rendered blank. Only the browser caught it — the unit tests resolve
       through Vitest's own pipeline and the production bundler papered over it.
-- [ ] Consider code-splitting the admin route; it is the only page most visitors
-      will never open.
+- [x] Code-split the admin route; it is the only page most visitors will never
+      open. `lazy()` plus a `Suspense` boundary placed _inside_ `RequireAuth`, so a
+      non-admin is turned away without ever fetching the chunk.
+  - [x] Honest about the size of the win: the main bundle went 289.77 kB to
+        286.92 kB, which is 89.74 kB to 89.39 kB gzipped. Under half a kilobyte.
+        AdminPage is only 3.31 kB because everything expensive in it -- react,
+        react-router, TanStack Query, the shared UI -- is in the main bundle
+        anyway and shared with every other page. The remaining benefit is
+        structural: the split point exists, so the page can grow without
+        everybody paying for it.
+  - [x] Asserted in the E2E suite, not just in the build output: the chunk is
+        absent from `performance.getEntriesByType('resource')` before navigation
+        and present after. Confirmed non-vacuous by restoring the eager import
+        and watching it fail.
 
 ## 9. Testing
 
