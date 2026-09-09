@@ -9,6 +9,21 @@ import { PostsService } from '../posts/posts.service.js'
 /** Feeds are a fixed window of recent posts, not a paginated archive. */
 export const FEED_ITEM_LIMIT = 20
 
+/**
+ * The feed-level `updated` for a feed with no posts at all.
+ *
+ * Atom requires the element, and the `feed` package substitutes `new Date()`
+ * when it is not given one -- at millisecond resolution, which makes an empty
+ * Atom document different on every single request. Its ETag then never matches,
+ * so a reader polling an empty bloog re-downloads it forever. (RSS and JSON Feed
+ * happen not to show this, which is exactly why it went unnoticed.)
+ *
+ * The epoch is the honest answer: there is no content, so there is no date on
+ * which the content last changed. It sorts such a feed last in an aggregator,
+ * which is the right place for a feed with nothing in it.
+ */
+const NO_CONTENT_DATE = new Date(0)
+
 interface FeedInput {
   title: string
   description: string
@@ -65,8 +80,9 @@ export class FeedsService {
       language: 'en',
       copyright: `All content is the property of its respective authors.`,
       generator: 'blooger',
-      // Absent when there are no posts at all, which readers handle fine.
-      updated: newest ? new Date(newest.updatedAt) : undefined,
+      // Derived from the content, never from the clock, so the same content
+      // always serializes to the same bytes and the ETag can do its job.
+      updated: newest ? new Date(newest.updatedAt) : NO_CONTENT_DATE,
       feedLinks: {
         atom: `${self}/feed.atom`,
         rss: `${self}/feed.rss`,
