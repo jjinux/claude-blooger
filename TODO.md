@@ -420,8 +420,44 @@ Legend: `[x]` done, `[ ]` not started.
       test that drives the whole chain rather than either half.
 - [x] Feed entries carry the same sanitized HTML the API serves, from the one
       `MarkdownService`, so a reader and the site can never disagree.
-- [ ] Consider caching rendered feeds. Every request currently re-renders up to 20
-      post bodies from Markdown; fine at this size, wasteful under real traffic.
+- [x] Caching rendered feeds. Done with HTTP caching rather than an in-process
+      cache, so the browser, the reader, and any CDN in front of us do the work.
+      Nothing to invalidate, nothing to size, nothing to go stale in a way we have
+      to reason about. Every feed route sends:
+
+  ```
+  Cache-Control: public, max-age=300, s-maxage=900, stale-while-revalidate=3600
+  ```
+
+  - [x] The ETag was already there -- Express computes a weak one from the body
+        and answers `If-None-Match` with a 304 by itself. So the missing piece
+        was only `Cache-Control`; a hand-rolled ETag would have been rewriting
+        what the framework already does.
+  - [x] **Feeds now skip the session middleware entirely.** This is the part that
+        made `public` safe. `rolling: true` re-sends an existing session's cookie
+        on every request it touches, so a logged-in reader fetching /feed.atom
+        got a `Set-Cookie` on the response. Marking that `public` invites a shared
+        cache to store one person's session and hand it to the next visitor. Most
+        CDNs decline to cache a response carrying Set-Cookie, but that is a
+        convention, not a boundary. It also means a feed request no longer touches
+        the session store at all.
+  - [x] **Bug found by the 304 test: the empty Atom feed was not byte-stable.**
+        Atom requires a feed-level `<updated>`, and the `feed` package substitutes
+        `new Date()` when given none -- at millisecond resolution. So an empty feed
+        differed on every request, its ETag never matched, and a reader polling an
+        empty bloog (there is a seeded one, `quiet`) re-downloaded it forever. RSS
+        and JSON Feed do not show the field, which is how it went unnoticed. Empty
+        feeds now use the epoch: there is no content, so there is no date on which
+        the content last changed.
+    - [x] The comment in the code claimed `updated` was "absent when there are no
+          posts, which readers handle fine". It was not absent. It was `now`.
+  - [x] The general rule this leaves behind: **feed output must be derived from
+        content, never from the clock**, or the ETag cannot do its job. Tested by
+        fetching twice and comparing bytes, and confirmed by reverting the fix and
+        watching three specs fail.
+  - [x] Not doing an in-process render cache. It would only pay off under traffic
+        that a CDN absorbs first, and it would introduce invalidation -- the thing
+        HTTP caching lets us not have.
 
 ## 8. Frontend
 
