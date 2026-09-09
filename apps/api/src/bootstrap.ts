@@ -10,6 +10,15 @@ import type { Env } from './config/env.js'
 import { TypeOrmSessionStore } from './auth/typeorm-session.store.js'
 
 /** Paths served outside the /api prefix. */
+/**
+ * Matches every feed path, site-wide and per-bloog, with or without the leading
+ * slash Express gives us. Kept as a predicate rather than reusing FEED_ROUTES
+ * below, because those are route *patterns* (`:username`), not paths.
+ */
+export function isFeedPath(path: string): boolean {
+  return /\/feed\.(atom|rss|json)$/.test(path)
+}
+
 export const FEED_ROUTES = [
   'feed.atom',
   'feed.rss',
@@ -34,29 +43,45 @@ export function configureApp(app: NestExpressApplication, env: Env): void {
   // and Nest starts and stops it with the application.
   const store = app.get(TypeOrmSessionStore)
 
-  app.use(
-    session({
-      name: SESSION_COOKIE_NAME,
-      secret: env.SESSION_SECRET,
-      store,
-      // The store is only written when something actually changed.
-      resave: false,
-      // No row for a visitor who never got a session touched.
-      saveUninitialized: false,
-      // Each request pushes the expiry back, so an active user is not logged out
-      // mid-session.
-      rolling: true,
-      cookie: {
-        httpOnly: true,
-        sameSite: 'lax',
-        // Behind TLS in production; must stay false locally or the cookie is
-        // dropped over plain http.
-        secure: env.NODE_ENV === 'production',
-        maxAge: SESSION_TTL_MS,
-        path: '/',
-      },
-    }),
-  )
+  const sessionMiddleware = session({
+    name: SESSION_COOKIE_NAME,
+    secret: env.SESSION_SECRET,
+    store,
+    // The store is only written when something actually changed.
+    resave: false,
+    // No row for a visitor who never got a session touched.
+    saveUninitialized: false,
+    // Each request pushes the expiry back, so an active user is not logged out
+    // mid-session.
+    rolling: true,
+    cookie: {
+      httpOnly: true,
+      sameSite: 'lax',
+      // Behind TLS in production; must stay false locally or the cookie is
+      // dropped over plain http.
+      secure: env.NODE_ENV === 'production',
+      maxAge: SESSION_TTL_MS,
+      path: '/',
+    },
+  })
+
+  /**
+   * Everything except the feeds.
+   *
+   * Feeds are anonymous, and `rolling: true` means an existing session re-sends
+   * its cookie on every request it touches -- so a logged-in reader fetching
+   * /feed.atom would get a `Set-Cookie` on a response marked
+   * `Cache-Control: public`. A shared cache that stored that would hand one
+   * person's session to the next visitor. Most CDNs decline to cache a response
+   * with Set-Cookie, but "most CDNs" is not a security boundary.
+   *
+   * It is also simply less work: a feed request no longer touches the session
+   * store at all.
+   */
+  app.use((request: Request, response: Response, next: NextFunction) => {
+    if (isFeedPath(request.path)) return next()
+    sessionMiddleware(request, response, next)
+  })
 
   // Feeds are not part of the JSON API, and `/feed.atom` is where readers look,
   // so they sit outside the prefix. This list must stay in step with the routes
