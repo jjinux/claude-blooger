@@ -126,6 +126,14 @@ If you add an attribute via `transformTags`, it must **also** be listed in
 `allowedAttributes` — the filter runs after the transform, and will otherwise
 strip the attribute it just added. This silently broke `rel="nofollow"` once.
 
+**`html: false` is load-bearing.** It is not one hardening flag among several:
+every mutation-XSS vector depends on an element parsed in a foreign context
+(`noscript`, `style`, `svg`, `math`, `template`, `xmp`), and `html: false` means
+none can exist in the source to begin with. That is the whole reason a third
+sanitizer was investigated and rejected — see the measurements in `TODO.md`.
+Turning it on to support embeds deletes that argument in one line, and the mXSS
+cases in `markdown.service.spec.ts` are there to fail when someone does.
+
 The SPA renders the server's `bodyHtml`. It never parses Markdown.
 
 ### Auth
