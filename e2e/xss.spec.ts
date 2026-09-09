@@ -16,6 +16,17 @@ test('a script in a post body reaches the DOM as inert text', async ({ page }) =
     '<img src=x onerror="window.__pwned = true">',
     '',
     '[a link](javascript:window.__pwned = true)',
+    '',
+    // Mutation-XSS vectors. A string comparison cannot judge these: the whole
+    // point is that the markup changes when a *browser* re-parses what the
+    // sanitizer emitted, so only a real browser can say whether they are inert.
+    // The unit specs check the emitted markup; this checks what the parser did
+    // with it.
+    '<noscript><p title="</noscript><img src=x onerror=window.__pwned=true>">',
+    '',
+    '<svg></p><style><a id="</style><img src=1 onerror=window.__pwned=true>">',
+    '',
+    '<math><mtext><table><mglyph><style><!--</style><img src=1 onerror=window.__pwned=true>',
   ].join('\n')
 
   await publishPost(page, 'On the subject of script tags', body)

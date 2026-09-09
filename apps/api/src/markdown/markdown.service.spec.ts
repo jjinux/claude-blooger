@@ -87,6 +87,43 @@ describe('MarkdownService', () => {
       expectInert(markdown.render('<style>body{display:none}</style>'))
     })
 
+    /**
+     * Mutation-XSS vectors: payloads that survive a sanitizer and then become
+     * something else when the browser re-parses the sanitizer's own output.
+     *
+     * They are here because they are the case DOMPurify is chiefly credited with
+     * handling, and the investigation recorded in TODO.md concluded this pipeline
+     * does not need it. Every one of these depends on an element whose content is
+     * parsed in a foreign context -- `noscript`, `style`, `svg`, `math`,
+     * `template`, `xmp`. `html: false` means none of them can exist in the first
+     * place: markdown-it escapes the source, so what reaches sanitize-html is
+     * already text.
+     *
+     * This block is the evidence for that conclusion, so if `html` is ever turned
+     * on, the conclusion fails here rather than in production.
+     */
+    describe('mutation XSS', () => {
+      const VECTORS: [string, string][] = [
+        ['noscript', '<noscript><p title="</noscript><img src=x onerror=alert(1)>">'],
+        ['style in svg', '<svg></p><style><a id="</style><img src=1 onerror=alert(1)>">'],
+        [
+          'mglyph in table',
+          '<math><mtext><table><mglyph><style><!--</style><img src=1 onerror=alert(1)>',
+        ],
+        [
+          'form and mglyph',
+          '<form><math><mtext></form><form><mglyph><style></math><img src onerror=alert(1)>',
+        ],
+        ['template', '<template><script>alert(1)</script></template>'],
+        ['comment breakout', '<!--><script>alert(1)</script>-->'],
+        ['xmp', '<xmp><script>alert(1)</script></xmp>'],
+      ]
+
+      it.each(VECTORS)('leaves %s inert', (_name, payload) => {
+        expectInert(markdown.render(payload))
+      })
+    })
+
     it('survives a mixed payload', () => {
       expectInert(
         markdown.render(
