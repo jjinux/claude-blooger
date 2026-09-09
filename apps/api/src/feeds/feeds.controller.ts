@@ -12,6 +12,21 @@ const RSS = 'application/rss+xml; charset=utf-8'
 const JSON_FEED = 'application/feed+json; charset=utf-8'
 
 /**
+ * Feeds are public and identical for everybody, so let the browser, the reader,
+ * and any CDN in front of us do the work.
+ *
+ * The ETag is Express's own, computed from the body, so a conditional request
+ * costs a render and a hash but no transfer -- and once `s-maxage` is in play, a
+ * CDN absorbs most requests without asking at all. `stale-while-revalidate` lets
+ * it answer instantly from a stale copy while it refreshes behind the reader's
+ * back; a feed an hour behind is not a problem worth a slow response.
+ *
+ * `public` is only safe because feeds never set a session cookie -- see the
+ * session middleware in bootstrap.ts, which deliberately skips these paths.
+ */
+const FEED_CACHE_CONTROL = 'public, max-age=300, s-maxage=900, stale-while-revalidate=3600'
+
+/**
  * Feeds deliberately sit outside the /api prefix -- they are not part of the JSON
  * API, and `/feed.atom` is the conventional place readers look. See the `exclude`
  * list in bootstrap.ts, which must stay in step with the routes below.
@@ -25,6 +40,7 @@ export class FeedsController {
 
   @Get('feed.atom')
   @Header('content-type', ATOM)
+  @Header('cache-control', FEED_CACHE_CONTROL)
   @ApiOperation({ summary: 'Atom 1.0 feed of every bloog' })
   @ApiOkResponse({
     description: 'The feed document.',
@@ -36,6 +52,7 @@ export class FeedsController {
 
   @Get('feed.rss')
   @Header('content-type', RSS)
+  @Header('cache-control', FEED_CACHE_CONTROL)
   @ApiOperation({ summary: 'RSS 2.0 feed of every bloog' })
   @ApiOkResponse({
     description: 'The feed document.',
@@ -47,6 +64,7 @@ export class FeedsController {
 
   @Get('feed.json')
   @Header('content-type', JSON_FEED)
+  @Header('cache-control', FEED_CACHE_CONTROL)
   @ApiOperation({ summary: 'JSON Feed 1.1 feed of every bloog' })
   @ApiOkResponse({
     description: 'The feed document.',
@@ -58,6 +76,7 @@ export class FeedsController {
 
   @Get('bloogs/:username/feed.atom')
   @Header('content-type', ATOM)
+  @Header('cache-control', FEED_CACHE_CONTROL)
   @ApiOperation({ summary: 'Atom 1.0 feed of one bloog' })
   @ApiOkResponse({
     description: 'The feed document.',
@@ -70,6 +89,7 @@ export class FeedsController {
 
   @Get('bloogs/:username/feed.rss')
   @Header('content-type', RSS)
+  @Header('cache-control', FEED_CACHE_CONTROL)
   @ApiOperation({ summary: 'RSS 2.0 feed of one bloog' })
   @ApiOkResponse({
     description: 'The feed document.',
@@ -82,6 +102,7 @@ export class FeedsController {
 
   @Get('bloogs/:username/feed.json')
   @Header('content-type', JSON_FEED)
+  @Header('cache-control', FEED_CACHE_CONTROL)
   @ApiOperation({ summary: 'JSON Feed 1.1 feed of one bloog' })
   @ApiOkResponse({
     description: 'The feed document.',
