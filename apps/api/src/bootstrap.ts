@@ -3,12 +3,13 @@ import type { NestExpressApplication } from '@nestjs/platform-express'
 import type { NextFunction, Request, Response } from 'express'
 import session from 'express-session'
 import { DataSource } from 'typeorm'
+import { SESSION_COOKIE_NAME, SESSION_TTL_MS } from './auth/session.constants.js'
 import { SessionEntity } from './auth/session.entity.js'
+import { ApiExceptionFilter } from './common/api-exception.filter.js'
 import { REPO_ROOT } from './config/paths.js'
+import { setupSwagger } from './docs/openapi.js'
 import type { Env } from './config/env.js'
 import { TypeOrmSessionStore } from './auth/typeorm-session.store.js'
-
-export const SESSION_COOKIE_NAME = 'blooger.sid'
 
 /** Paths served outside the /api prefix. */
 export const FEED_ROUTES = [
@@ -19,7 +20,6 @@ export const FEED_ROUTES = [
   'bloogs/:username/feed.rss',
   'bloogs/:username/feed.json',
 ]
-export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000
 
 /**
  * Everything that has to happen between `NestFactory.create` and `listen`.
@@ -29,6 +29,9 @@ export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000
  * than the one that ships.
  */
 export function configureApp(app: NestExpressApplication, env: Env): void {
+  // First, so that everything below it fails in one documented shape.
+  app.useGlobalFilters(new ApiExceptionFilter())
+
   const dataSource = app.get(DataSource)
   const store = new TypeOrmSessionStore(dataSource.getRepository(SessionEntity))
 
@@ -60,6 +63,9 @@ export function configureApp(app: NestExpressApplication, env: Env): void {
   // so they sit outside the prefix. This list must stay in step with the routes
   // on FeedsController; there is a test that fetches each one.
   app.setGlobalPrefix('api', { exclude: FEED_ROUTES })
+
+  // After the prefix, so the documented paths are the ones clients call.
+  setupSwagger(app)
 
   // In development the SPA is served by Vite, which proxies /api here.
   if (env.NODE_ENV === 'production') serveSpa(app)
